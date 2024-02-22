@@ -183,6 +183,7 @@ export const navItems: {
       route: '/news',
       hideBar: true,
       hideDrawer: true,
+      _delete: true,
     },
   ],
 
@@ -210,18 +211,18 @@ export const navItems: {
     //   icon: TwitterIcon,
     //   href: 'https://twitter.com',
     // },
-    {
-      type: 'extLink',
-      name: 'Discord',
-      icon: DiscordIcon,
-      href: Brand.URIs.SupportInvite,
-    },
-    {
-      type: 'extLink',
-      name: 'GitHub',
-      icon: GitHubIcon,
-      href: Brand.URIs.OpenRepo,
-    },
+    // {
+    //   type: 'extLink',
+    //   name: 'Discord',
+    //   icon: DiscordIcon,
+    //   href: Brand.URIs.SupportInvite,
+    // },
+    // {
+    //   type: 'extLink',
+    //   name: 'GitHub',
+    //   icon: GitHubIcon,
+    //   href: Brand.URIs.OpenRepo,
+    // },
   ],
 
 };
