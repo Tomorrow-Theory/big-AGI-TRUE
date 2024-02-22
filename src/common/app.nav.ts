@@ -139,7 +139,7 @@ export const navItems: {
       route: '/workspace',
       hideDrawer: true,
       hideOnMobile: true,
-      // _delete: true,
+      _delete: true,
     },
     // <-- divider here -->
     {

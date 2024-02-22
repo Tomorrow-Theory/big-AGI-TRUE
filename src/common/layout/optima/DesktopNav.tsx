@@ -8,6 +8,8 @@ import MenuIcon from '@mui/icons-material/Menu';
 import { useModelsStore } from '~/modules/llms/store-llms';
 
 import { AgiSquircleIcon } from '~/common/components/icons/AgiSquircleIcon';
+import iconTT from '../../../../public/icons/icon-1024x1024.png';
+
 import { checkDivider, checkVisibileIcon, NavItemApp, navItems } from '~/common/app.nav';
 import { themeZIndexDesktopNav } from '~/common/app.theme';
 
@@ -132,7 +134,7 @@ export function DesktopNav(props: { component: React.ElementType, currentApp?: N
       <InvertedBarCornerItem>
         <Tooltip title={isDrawerOpen ? 'Close Drawer' /* for Aria reasons */ : 'Open Drawer'}>
           <DesktopNavIcon disabled={!logoButtonTogglesPane} onClick={handleLogoButtonClick} className={navItemClasses.typeMenu}>
-            {logoButtonTogglesPane ? <MenuIcon /> : <AgiSquircleIcon inverted sx={{ color: 'white' }} />}
+            {logoButtonTogglesPane ? <MenuIcon /> : <img src={iconTT.src} height={'30px'} />}
           </DesktopNavIcon>
         </Tooltip>
       </InvertedBarCornerItem>

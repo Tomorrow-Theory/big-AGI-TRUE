@@ -11,6 +11,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 
 import { checkVisibleNav, NavItemApp } from '~/common/app.nav';
 import { AgiSquircleIcon } from '~/common/components/icons/AgiSquircleIcon';
+import iconTT from '../../../../public/icons/icon-1024x1024.png';
 import { Brand } from '~/common/app.config';
 import { CloseableMenu } from '~/common/components/CloseableMenu';
 import { Link } from '~/common/components/Link';
@@ -29,7 +30,7 @@ const PageBarItemsFallback = (props: { currentApp?: NavItemApp }) =>
     gap: { xs: 1, md: 2 },
   }}>
     <Link href={ROUTE_INDEX}>
-      <AgiSquircleIcon inverted sx={{ width: 32, height: 32, color: 'white' }} />
+      <img src={iconTT.src} height={'30px'} />
     </Link>
 
     <Typography level='title-md'>
