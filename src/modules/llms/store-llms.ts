@@ -118,6 +118,8 @@ export const useModelsStore = create<LlmsStore>()(
           "sId": "togetherai",
           "options": {
             "llmRef": "Qwen/Qwen1.5-72B-Chat",
+            "llmTemperature": 0.5,
+            "llmResponseTokens": null
           },
           "_source": {
             "id": "togetherai",
@@ -144,6 +146,8 @@ export const useModelsStore = create<LlmsStore>()(
           "sId": "perplexity",
           "options": {
             "llmRef": "llama-2-70b-chat",
+            "llmTemperature": 0.5,
+            "llmResponseTokens": null
           },
           "_source": {
             "id": "perplexity",
@@ -168,6 +172,8 @@ export const useModelsStore = create<LlmsStore>()(
           "sId": "perplexity",
           "options": {
             "llmRef": "mixtral-8x7b-instruct",
+            "llmTemperature": 0.5,
+            "llmResponseTokens": null
           },
           "_source": {
             "id": "perplexity",
@@ -192,6 +198,8 @@ export const useModelsStore = create<LlmsStore>()(
           "sId": "perplexity",
           "options": {
             "llmRef": "pplx-8x7b-online",
+            "llmTemperature": 0.5,
+            "llmResponseTokens": null
           },
           "_source": {
             "id": "perplexity",
@@ -216,6 +224,8 @@ export const useModelsStore = create<LlmsStore>()(
           "sId": "openai",
           "options": {
             "llmRef": "gpt-4-0125-preview",
+            "llmTemperature": 0.5,
+            "llmResponseTokens": null
           },
           "_source": {
             "id": "openai",
@@ -238,6 +248,8 @@ export const useModelsStore = create<LlmsStore>()(
           "sId": "openai",
           "options": {
             "llmRef": "gpt-3.5-turbo-0125",
+            "llmTemperature": 0.5,
+            "llmResponseTokens": null
           },
           "_source": {
             "id": "openai",
@@ -260,6 +272,8 @@ export const useModelsStore = create<LlmsStore>()(
           "sId": "anthropic",
           "options": {
             "llmRef": "claude-2.1",
+            "llmTemperature": 0.5,
+            "llmResponseTokens": null
           },
           "_source": {
             "id": "anthropic",
@@ -282,6 +296,8 @@ export const useModelsStore = create<LlmsStore>()(
           "sId": "azure",
           "options": {
             "llmRef": "A-SAFE",
+            "llmTemperature": 0.5,
+            "llmResponseTokens": null
           },
           "_source": {
             "id": "azure",
@@ -304,6 +320,8 @@ export const useModelsStore = create<LlmsStore>()(
           "sId": "azure",
           "options": {
             "llmRef": "B-SAFE",
+            "llmTemperature": 0.5,
+            "llmResponseTokens": null
           },
           "_source": {
             "id": "azure",
@@ -326,6 +344,8 @@ export const useModelsStore = create<LlmsStore>()(
           "sId": "azure",
           "options": {
             "llmRef": "C-SAFE",
+            "llmTemperature": 0.5,
+            "llmResponseTokens": null
           },
           "_source": {
             "id": "azure",
@@ -348,6 +368,8 @@ export const useModelsStore = create<LlmsStore>()(
           "sId": "azure",
           "options": {
             "llmRef": "D-SAFE",
+            "llmTemperature": 0.5,
+            "llmResponseTokens": null
           },
           "_source": {
             "id": "azure",
