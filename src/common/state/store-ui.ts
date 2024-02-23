@@ -53,7 +53,9 @@ export const useUIPreferencesStore = create<UIPreferencesStore>()(
 
       // UI Features
 
-      preferredLanguage: (typeof navigator !== 'undefined') && navigator.language || 'en-US',
+      //preferredLanguage: (typeof navigator !== 'undefined') && navigator.language || 'en-US',
+      preferredLanguage: 'fr-FR',
+
       setPreferredLanguage: (preferredLanguage: string) => set({ preferredLanguage }),
 
       centerMode: 'wide',

@@ -11,7 +11,7 @@ const clientSideEmotionCache = createEmotionCache();
 
 export const ProviderTheming = (props: { emotionCache?: EmotionCache, children: React.ReactNode }) =>
   <CacheProvider value={props.emotionCache || clientSideEmotionCache}>
-    <CssVarsProvider defaultMode='light' theme={appTheme}>
+    <CssVarsProvider defaultMode='dark' theme={appTheme}>
       <CssBaseline />
       {props.children}
     </CssVarsProvider>

@@ -469,7 +469,8 @@ export function Composer(props: {
   const isReAct = chatModeId === 'generate-react';
   const isDraw = chatModeId === 'generate-image';
 
-  const showCall = isText || isAppend;
+  //const showCall = isText || isAppend;
+  const showCall = false; // FIXME: disabled for now
 
   const buttonColor: ColorPaletteProp =
     assistantAbortible ? 'warning'
