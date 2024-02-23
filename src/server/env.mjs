@@ -2,6 +2,11 @@ import { createEnv } from '@t3-oss/env-nextjs';
 import { z } from 'zod';
 
 export const env = createEnv({
+
+  /*
+   * Serverside Environment variables, not available on the client.
+   * Will throw if you access these variables on the client.
+   */
   server: {
 
     // Backend Postgres, for optional storage via Prisma
@@ -71,6 +76,17 @@ export const env = createEnv({
 
   },
 
+  /*
+   * Environment variables available on the client (and server).
+   * You'll get type errors if these are not prefixed with NEXT_PUBLIC_.
+   */
+  client: {
+
+    // Frontend: server to use for PlantUML rendering
+    NEXT_PUBLIC_PLANTUML_SERVER_URL: z.string().url().optional(),
+
+  },
+
   onValidationError: error => {
     console.error('❌ Invalid environment variables:', error.issues);
     throw new Error('Invalid environment variable');
@@ -80,5 +96,7 @@ export const env = createEnv({
   emptyStringAsUndefined: true,
 
   // with Noext.JS >= 13.4.4 we'd only need to destructure client variables
-  experimental__runtimeEnv: {},
+  experimental__runtimeEnv: {
+    NEXT_PUBLIC_PLANTUML_SERVER_URL: process.env.NEXT_PUBLIC_PLANTUML_SERVER_URL,
+  },
 });

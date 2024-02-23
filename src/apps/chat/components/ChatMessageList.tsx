@@ -10,6 +10,7 @@ import { InlineError } from '~/common/components/InlineError';
 import { PreferencesTab, useOptimaLayout } from '~/common/layout/optima/useOptimaLayout';
 import { ShortcutKeyName, useGlobalShortcut } from '~/common/components/useGlobalShortcut';
 import { createDMessage, DConversationId, DMessage, getConversation, useChatStore } from '~/common/state/store-chats';
+import { useBrowserTranslationWarning } from '~/common/components/useIsBrowserTranslating';
 import { useCapabilityElevenLabs } from '~/common/components/useCapabilities';
 
 import { ChatMessage, ChatMessageMemo } from './message/ChatMessage';
@@ -26,8 +27,8 @@ export function ChatMessageList(props: {
   conversationId: DConversationId | null,
   capabilityHasT2I: boolean,
   chatLLMContextTokens: number | null,
+  fitScreen: boolean,
   isMessageSelectionMode: boolean,
-  isMobile: boolean,
   onConversationBranch: (conversationId: DConversationId, messageId: string) => void,
   onConversationExecuteHistory: (conversationId: DConversationId, history: DMessage[], chatEffectBestOf: boolean) => Promise<void>,
   onTextDiagram: (diagramConfig: DiagramConfig | null) => void,
@@ -46,6 +47,7 @@ export function ChatMessageList(props: {
   const { notifyBooting } = useScrollToBottom();
   const { openPreferencesTab } = useOptimaLayout();
   const [showSystemMessages] = useChatShowSystemMessages();
+  const optionalTranslationWarning = useBrowserTranslationWarning();
   const { conversationMessages, historyTokenCount, editMessage, deleteMessage, setMessages } = useChatStore(state => {
     const conversation = state.conversations.find(conversation => conversation.id === props.conversationId);
     return {
@@ -196,6 +198,8 @@ export function ChatMessageList(props: {
       // marginBottom: '-1px',
     }}>
 
+      {optionalTranslationWarning}
+
       {props.isMessageSelectionMode && (
         <MessagesSelectionHeader
           hasSelected={selectedMessages.size > 0}
@@ -226,9 +230,9 @@ export function ChatMessageList(props: {
               key={'msg-' + message.id}
               message={message}
               diffPreviousText={message === diffTargetMessage ? diffPrevText : undefined}
+              fitScreen={props.fitScreen}
               isBottom={idx === count - 1}
               isImagining={isImagining}
-              isMobile={props.isMobile}
               isSpeaking={isSpeaking}
               onConversationBranch={handleConversationBranch}
               onConversationRestartFrom={handleConversationRestartFrom}
