@@ -20,7 +20,8 @@ export function ProviderBootstrapLogic(props: { children: React.ReactNode }) {
   const isRedirecting = React.useMemo(() => {
 
     // redirect to the news page if the news is outdated
-    let doRedirect = shallRedirectToNews();
+    // let doRedirect = shallRedirectToNews();
+    let doRedirect = false;
     if (doRedirect) {
       markNewsAsSeen();
       void navigateToNews();
