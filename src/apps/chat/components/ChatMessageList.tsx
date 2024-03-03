@@ -6,15 +6,18 @@ import { SxProps } from '@mui/joy/styles/types';
 
 import type { DiagramConfig } from '~/modules/aifn/digrams/DiagramsModal';
 
+import type { ConversationHandler } from '~/common/chats/ConversationHandler';
 import { InlineError } from '~/common/components/InlineError';
 import { PreferencesTab, useOptimaLayout } from '~/common/layout/optima/useOptimaLayout';
 import { ShortcutKeyName, useGlobalShortcut } from '~/common/components/useGlobalShortcut';
 import { createDMessage, DConversationId, DMessage, getConversation, useChatStore } from '~/common/state/store-chats';
 import { useBrowserTranslationWarning } from '~/common/components/useIsBrowserTranslating';
 import { useCapabilityElevenLabs } from '~/common/components/useCapabilities';
+import { useEphemerals } from '~/common/chats/EphemeralsStore';
 
 import { ChatMessage, ChatMessageMemo } from './message/ChatMessage';
 import { CleanerMessage, MessagesSelectionHeader } from './message/CleanerMessage';
+import { Ephemerals } from './Ephemerals';
 import { PersonaSelector } from './persona-selector/PersonaSelector';
 import { useChatShowSystemMessages } from '../store-app-chat';
 import { useScrollToBottom } from './scroll-to-bottom/useScrollToBottom';
@@ -25,12 +28,13 @@ import { useScrollToBottom } from './scroll-to-bottom/useScrollToBottom';
  */
 export function ChatMessageList(props: {
   conversationId: DConversationId | null,
+  conversationHandler: ConversationHandler | null,
   capabilityHasT2I: boolean,
   chatLLMContextTokens: number | null,
   fitScreen: boolean,
   isMessageSelectionMode: boolean,
   onConversationBranch: (conversationId: DConversationId, messageId: string) => void,
-  onConversationExecuteHistory: (conversationId: DConversationId, history: DMessage[], chatEffectBestOf: boolean) => Promise<void>,
+  onConversationExecuteHistory: (conversationId: DConversationId, history: DMessage[], chatEffectBeam: boolean) => Promise<void>,
   onTextDiagram: (diagramConfig: DiagramConfig | null) => void,
   onTextImagine: (conversationId: DConversationId, selectedText: string) => Promise<void>,
   onTextSpeak: (selectedText: string) => Promise<void>,
@@ -58,6 +62,7 @@ export function ChatMessageList(props: {
       setMessages: state.setMessages,
     };
   }, shallow);
+  const ephemerals = useEphemerals(props.conversationHandler);
   const { mayWork: isSpeakable } = useCapabilityElevenLabs();
 
   // derived state
@@ -77,11 +82,11 @@ export function ChatMessageList(props: {
     conversationId && onConversationBranch(conversationId, messageId);
   }, [conversationId, onConversationBranch]);
 
-  const handleConversationRestartFrom = React.useCallback(async (messageId: string, offset: number, chatEffectBestOf: boolean) => {
+  const handleConversationRestartFrom = React.useCallback(async (messageId: string, offset: number, chatEffectBeam: boolean) => {
     const messages = getConversation(conversationId)?.messages;
     if (messages) {
       const truncatedHistory = messages.slice(0, messages.findIndex(m => m.id === messageId) + offset + 1);
-      conversationId && await onConversationExecuteHistory(conversationId, truncatedHistory, chatEffectBestOf);
+      conversationId && await onConversationExecuteHistory(conversationId, truncatedHistory, chatEffectBeam);
     }
   }, [conversationId, onConversationExecuteHistory]);
 
@@ -246,6 +251,18 @@ export function ChatMessageList(props: {
 
           );
         },
+      )}
+
+      {!!ephemerals.length && (
+        <Ephemerals
+          ephemerals={ephemerals}
+          conversationId={props.conversationId}
+          sx={{
+            mt: 'auto',
+            overflowY: 'auto',
+            minHeight: 64,
+          }}
+        />
       )}
 
     </List>
