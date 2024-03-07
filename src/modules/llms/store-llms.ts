@@ -105,184 +105,6 @@ export const useModelsStore = create<LlmsStore>()(
       _source: null,
       llms: [
         {
-          "id": "togetherai-Qwen/Qwen1.5-72B-Chat",
-          "label": "Qwen1.5 72B 🇨🇳",
-          "created": 1707133018,
-          "updated": 1707133018,
-          "description": "New Togehter AI Model",
-          "tags": [],
-          "contextTokens": null,
-          "maxOutputTokens": null,
-          "hidden": false,
-          "isFree": false,
-          "sId": "togetherai",
-          "options": {
-            "llmRef": "Qwen/Qwen1.5-72B-Chat",
-            "llmTemperature": 0.5,
-            "llmResponseTokens": null
-          },
-          "_source": {
-            "id": "togetherai",
-            "label": "Together AI",
-            "vId": "togetherai",
-            "setup": {
-              "togetherKey": "",
-              "togetherHost": "https://api.together.xyz",
-              "togetherFreeTrial": false
-            }
-          }
-        },
-        {
-          "id": "perplexity-llama-2-70b-chat",
-          "label": "Llama 2 | Meta ⓕ",
-          "created": 0,
-          "updated": 0,
-          "description": "Llama 2 is a collection of pretrained and fine-tuned generative text models.",
-          "tags": [],
-          "contextTokens": 4096,
-          "maxOutputTokens": 2048,
-          "hidden": false,
-          "isFree": false,
-          "sId": "perplexity",
-          "options": {
-            "llmRef": "llama-2-70b-chat",
-            "llmTemperature": 0.5,
-            "llmResponseTokens": null
-          },
-          "_source": {
-            "id": "perplexity",
-            "label": "Perplexity",
-            "vId": "perplexity",
-            "setup": {
-              "perplexityKey": ""
-            }
-          }
-        },
-        {
-          "id": "perplexity-mixtral-8x7b-instruct",
-          "label": "Mixtral 8x7B 🇫🇷",
-          "created": 0,
-          "updated": 0,
-          "description": "The Mixtral-8x7B Large Language Model (LLM) is a pretrained generative Sparse Mixture of Experts.",
-          "tags": [],
-          "contextTokens": 4096,
-          "maxOutputTokens": 2048,
-          "hidden": false,
-          "isFree": false,
-          "sId": "perplexity",
-          "options": {
-            "llmRef": "mixtral-8x7b-instruct",
-            "llmTemperature": 0.5,
-            "llmResponseTokens": null
-          },
-          "_source": {
-            "id": "perplexity",
-            "label": "Perplexity",
-            "vId": "perplexity",
-            "setup": {
-              "perplexityKey": ""
-            }
-          }
-        },
-        {
-          "id": "perplexity-pplx-8x7b-online",
-          "label": "Perplexity 8x7B | Recherche Internet",
-          "created": 0,
-          "updated": 0,
-          "description": "Perplexity 8x7B Online",
-          "tags": [],
-          "contextTokens": 4096,
-          "maxOutputTokens": 2048,
-          "hidden": false,
-          "isFree": false,
-          "sId": "perplexity",
-          "options": {
-            "llmRef": "pplx-8x7b-online",
-            "llmTemperature": 0.5,
-            "llmResponseTokens": null
-          },
-          "_source": {
-            "id": "perplexity",
-            "label": "Perplexity",
-            "vId": "perplexity",
-            "setup": {
-              "perplexityKey": ""
-            }
-          }
-        },
-        {
-          "id": "openai-gpt-4-0125-preview",
-          "label": "GPT-4",
-          "created": 1706037612,
-          "updated": 1706037612,
-          "description": "The latest GPT-4 model intended to reduce cases of “laziness” where the model doesn’t complete a task.",
-          "tags": [],
-          "contextTokens": 128000,
-          "maxOutputTokens": 4096,
-          "hidden": false,
-          "isFree": false,
-          "sId": "openai",
-          "options": {
-            "llmRef": "gpt-4-0125-preview",
-            "llmTemperature": 0.5,
-            "llmResponseTokens": null
-          },
-          "_source": {
-            "id": "openai",
-            "label": "OpenAI",
-            "vId": "openai",
-            "setup": {}
-          }
-        },
-        {
-          "id": "openai-gpt-3.5-turbo-0125",
-          "label": "GPT-3.5",
-          "created": 1706048358,
-          "updated": 1706048358,
-          "description": "The latest GPT-3.5 Turbo model with higher accuracy at responding in requested formats and a fix for a bug which caused a text encoding issue for non-English language function calls.",
-          "tags": [],
-          "contextTokens": 16385,
-          "maxOutputTokens": 4096,
-          "hidden": false,
-          "isFree": false,
-          "sId": "openai",
-          "options": {
-            "llmRef": "gpt-3.5-turbo-0125",
-            "llmTemperature": 0.5,
-            "llmResponseTokens": null
-          },
-          "_source": {
-            "id": "openai",
-            "label": "OpenAI",
-            "vId": "openai",
-            "setup": {}
-          }
-        },
-        {
-          "id": "anthropic-claude-2.1",
-          "label": "Claude 2.1",
-          "created": 1700524800,
-          "updated": 0,
-          "description": "Superior performance on tasks that require complex reasoning, with reduced model hallucination rates",
-          "tags": [],
-          "contextTokens": 200000,
-          "maxOutputTokens": 100000,
-          "hidden": false,
-          "isFree": false,
-          "sId": "anthropic",
-          "options": {
-            "llmRef": "claude-2.1",
-            "llmTemperature": 0.5,
-            "llmResponseTokens": null
-          },
-          "_source": {
-            "id": "anthropic",
-            "label": "Anthropic (Amazon)",
-            "vId": "anthropic",
-            "setup": {}
-          }
-        },
-        {
           "id": "azure-A-SAFE",
           "label": "A | GPT-4 | PRIVATE | Default 🌟",
           "created": 1707754409,
@@ -377,7 +199,261 @@ export const useModelsStore = create<LlmsStore>()(
             "vId": "azure",
             "setup": {}
           }
-        }
+        },
+        {
+          "id": "openai-gpt-4-0125-preview",
+          "label": "GPT-4",
+          "created": 1706037612,
+          "updated": 1706037612,
+          "description": "The latest GPT-4 model intended to reduce cases of “laziness” where the model doesn’t complete a task.",
+          "tags": [],
+          "contextTokens": 128000,
+          "maxOutputTokens": 4096,
+          "hidden": false,
+          "isFree": false,
+          "sId": "openai",
+          "options": {
+            "llmRef": "gpt-4-0125-preview",
+            "llmTemperature": 0.5,
+            "llmResponseTokens": null
+          },
+          "_source": {
+            "id": "openai",
+            "label": "OpenAI",
+            "vId": "openai",
+            "setup": {}
+          }
+        },
+        {
+          "id": "openai-gpt-3.5-turbo-0125",
+          "label": "GPT-3.5",
+          "created": 1706048358,
+          "updated": 1706048358,
+          "description": "The latest GPT-3.5 Turbo model with higher accuracy at responding in requested formats and a fix for a bug which caused a text encoding issue for non-English language function calls.",
+          "tags": [],
+          "contextTokens": 16385,
+          "maxOutputTokens": 4096,
+          "hidden": false,
+          "isFree": false,
+          "sId": "openai",
+          "options": {
+            "llmRef": "gpt-3.5-turbo-0125",
+            "llmTemperature": 0.5,
+            "llmResponseTokens": null
+          },
+          "_source": {
+            "id": "openai",
+            "label": "OpenAI",
+            "vId": "openai",
+            "setup": {}
+          }
+        },
+        {
+          "id": "anthropic-claude-3-opus-20240229",
+          "label": "Claude 3 Opus",
+          "created": 1709164800,
+          "updated": 0,
+          "description": "Most powerful model for highly complex tasks",
+          "tags": [],
+          "contextTokens": 200000,
+          "maxOutputTokens": 4096,
+          "hidden": false,
+          "isFree": false,
+          "sId": "anthropic",
+          "options": {
+            "llmRef": "claude-3-opus-20240229",
+            "llmTemperature": 0.5,
+            "llmResponseTokens": 2048
+          },
+          "_source": {
+            "id": "anthropic",
+            "label": "Anthropic (Amazon)",
+            "vId": "anthropic",
+            "setup": {}
+          }
+        },
+        {
+          "id": "anthropic-claude-3-sonnet-20240229",
+          "label": "Claude 3 Sonnet",
+          "created": 1709164800,
+          "updated": 0,
+          "description": "Ideal balance of intelligence and speed for enterprise workloads",
+          "tags": [],
+          "contextTokens": 200000,
+          "maxOutputTokens": 4096,
+          "hidden": false,
+          "isFree": false,
+          "sId": "anthropic",
+          "options": {
+            "llmRef": "claude-3-sonnet-20240229",
+            "llmTemperature": 0.5,
+            "llmResponseTokens": 2048
+          },
+          "_source": {
+            "id": "anthropic",
+            "label": "Anthropic (Amazon)",
+            "vId": "anthropic",
+            "setup": {}
+          }
+        },
+        {
+          "id": "groq-llama2-70b-4096",
+          "label": "llama2 70b 4096",
+          "created": 1693721698,
+          "updated": 1693721698,
+          "description": "New Model",
+          "tags": [],
+          "contextTokens": 32768,
+          "maxOutputTokens": 16384,
+          "hidden": false,
+          "isFree": false,
+          "sId": "groq",
+          "options": {
+            "llmRef": "llama2-70b-4096",
+            "llmTemperature": 0.5,
+            "llmResponseTokens": 4096
+          },
+          "_source":  {
+            "id": "groq",
+            "label": "Groq",
+            "vId": "groq",
+            "setup": {
+              "groqKey": ""
+            }
+          }
+        },
+        {
+          "id": "groq-mixtral-8x7b-32768",
+          "label": "Mixtral 8x7B Instruct v0.1",
+          "created": 1693721698,
+          "updated": 1693721698,
+          "description": "The Mixtral-8x7B Large Language Model (LLM) is a pretrained generative Sparse Mixture of Experts.",
+          "tags": [],
+          "contextTokens": 32768,
+          "maxOutputTokens": 16384,
+          "hidden": false,
+          "isFree": false,
+          "sId": "groq",
+          "options": {
+            "llmRef": "mixtral-8x7b-32768",
+            "llmTemperature": 0.5,
+            "llmResponseTokens": 4096
+          },
+          "_source":  {
+            "id": "groq",
+            "label": "Groq",
+            "vId": "groq",
+            "setup": {
+              "groqKey": ""
+            }
+          }
+        },
+        {
+          "id": "perplexity-sonar-medium-online",
+          "label": "Sonar Medium Online 🌐",
+          "created": 0,
+          "updated": 0,
+          "description": "Sonar Medium Online",
+          "tags": [],
+          "contextTokens": 4096,
+          "maxOutputTokens": 2048,
+          "hidden": false,
+          "isFree": false,
+          "sId": "perplexity",
+          "options": {
+            "llmRef": "sonar-medium-online",
+            "llmTemperature": 0.5,
+            "llmResponseTokens": 512
+          },
+          "_source": {
+            "id": "perplexity",
+            "label": "Perplexity",
+            "vId": "perplexity",
+            "setup": {
+              "perplexityKey": ""
+            }
+          }
+        },
+        {
+          "id": "perplexity-mixtral-8x7b-instruct",
+          "label": "Mixtral 8x7B 🇫🇷",
+          "created": 0,
+          "updated": 0,
+          "description": "The Mixtral-8x7B Large Language Model (LLM) is a pretrained generative Sparse Mixture of Experts.",
+          "tags": [],
+          "contextTokens": 4096,
+          "maxOutputTokens": 2048,
+          "hidden": false,
+          "isFree": false,
+          "sId": "perplexity",
+          "options": {
+            "llmRef": "mixtral-8x7b-instruct",
+            "llmTemperature": 0.5,
+            "llmResponseTokens": null
+          },
+          "_source": {
+            "id": "perplexity",
+            "label": "Perplexity",
+            "vId": "perplexity",
+            "setup": {
+              "perplexityKey": ""
+            }
+          }
+        },
+        {
+          "id": "perplexity-llama-2-70b-chat",
+          "label": "Llama 2 | Meta ⓕ",
+          "created": 0,
+          "updated": 0,
+          "description": "Llama 2 is a collection of pretrained and fine-tuned generative text models.",
+          "tags": [],
+          "contextTokens": 4096,
+          "maxOutputTokens": 2048,
+          "hidden": false,
+          "isFree": false,
+          "sId": "perplexity",
+          "options": {
+            "llmRef": "llama-2-70b-chat",
+            "llmTemperature": 0.5,
+            "llmResponseTokens": null
+          },
+          "_source": {
+            "id": "perplexity",
+            "label": "Perplexity",
+            "vId": "perplexity",
+            "setup": {
+              "perplexityKey": ""
+            }
+          }
+        },
+        {
+          "id": "togetherai-Qwen/Qwen1.5-72B-Chat",
+          "label": "Qwen1.5 72B 🇨🇳",
+          "created": 1707133018,
+          "updated": 1707133018,
+          "description": "New Togehter AI Model",
+          "tags": [],
+          "contextTokens": null,
+          "maxOutputTokens": null,
+          "hidden": false,
+          "isFree": false,
+          "sId": "togetherai",
+          "options": {
+            "llmRef": "Qwen/Qwen1.5-72B-Chat",
+            "llmTemperature": 0.5,
+            "llmResponseTokens": null
+          },
+          "_source": {
+            "id": "togetherai",
+            "label": "Together AI",
+            "vId": "togetherai",
+            "setup": {
+              "togetherKey": "",
+              "togetherHost": "https://api.together.xyz",
+              "togetherFreeTrial": false
+            }
+          }
+        },
       ],
       sources: [
         {
@@ -404,6 +480,14 @@ export const useModelsStore = create<LlmsStore>()(
           "vId": "perplexity",
           "setup": {
             "perplexityKey": ""
+          }
+        },
+        {
+          "id": "groq",
+          "label": "Groq",
+          "vId": "groq",
+          "setup": {
+            "groqKey": ""
           }
         },
         {
