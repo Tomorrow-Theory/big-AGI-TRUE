@@ -249,54 +249,6 @@ export const useModelsStore = create<LlmsStore>()(
           }
         },
         {
-          "id": "anthropic-claude-3-opus-20240229",
-          "label": "Claude 3 Opus",
-          "created": 1709164800,
-          "updated": 0,
-          "description": "Most powerful model for highly complex tasks",
-          "tags": [],
-          "contextTokens": 200000,
-          "maxOutputTokens": 4096,
-          "hidden": false,
-          "isFree": false,
-          "sId": "anthropic",
-          "options": {
-            "llmRef": "claude-3-opus-20240229",
-            "llmTemperature": 0.5,
-            "llmResponseTokens": 2048
-          },
-          "_source": {
-            "id": "anthropic",
-            "label": "Anthropic (Amazon)",
-            "vId": "anthropic",
-            "setup": {}
-          }
-        },
-        {
-          "id": "anthropic-claude-3-sonnet-20240229",
-          "label": "Claude 3 Sonnet",
-          "created": 1709164800,
-          "updated": 0,
-          "description": "Ideal balance of intelligence and speed for enterprise workloads",
-          "tags": [],
-          "contextTokens": 200000,
-          "maxOutputTokens": 4096,
-          "hidden": false,
-          "isFree": false,
-          "sId": "anthropic",
-          "options": {
-            "llmRef": "claude-3-sonnet-20240229",
-            "llmTemperature": 0.5,
-            "llmResponseTokens": 2048
-          },
-          "_source": {
-            "id": "anthropic",
-            "label": "Anthropic (Amazon)",
-            "vId": "anthropic",
-            "setup": {}
-          }
-        },
-        {
           "id": "groq-llama2-70b-4096",
           "label": "llama2 70b 4096",
           "created": 1693721698,
