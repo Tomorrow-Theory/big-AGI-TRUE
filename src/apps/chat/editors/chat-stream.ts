@@ -7,7 +7,7 @@ import { llmStreamingChatGenerate } from '~/modules/llms/llm.client';
 import { speakText } from '~/modules/elevenlabs/elevenlabs.client';
 
 import type { DMessage } from '~/common/state/store-chats';
-import { ConversationManager } from '~/common/chats/ConversationHandler';
+import { ConversationsManager } from '~/common/chats/ConversationsManager';
 
 import { ChatAutoSpeakType, getChatAutoAI } from '../store-app-chat';
 
@@ -16,7 +16,7 @@ import { ChatAutoSpeakType, getChatAutoAI } from '../store-app-chat';
  * The main "chat" function. TODO: this is here so we can soon move it to the data model.
  */
 export async function runAssistantUpdatingState(conversationId: string, history: DMessage[], assistantLlmId: DLLMId, systemPurpose: SystemPurposeId, parallelViewCount: number) {
-  const cHandler = ConversationManager.getHandler(conversationId);
+  const cHandler = ConversationsManager.getHandler(conversationId);
 
   // ai follow-up operations (fire/forget)
   const { autoSpeak, autoSuggestDiagrams, autoSuggestQuestions, autoTitleChat } = getChatAutoAI();
@@ -54,7 +54,7 @@ export async function runAssistantUpdatingState(conversationId: string, history:
 }
 
 
-async function streamAssistantMessage(
+export async function streamAssistantMessage(
   llmId: DLLMId,
   history: DMessage[],
   throttleUnits: number, // 0: disable, 1: default throttle (12Hz), 2+ reduce the message frequency with the square root
