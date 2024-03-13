@@ -1,14 +1,16 @@
 import * as React from 'react';
 
 import type { SxProps } from '@mui/joy/styles/types';
-import { Box, IconButton, styled } from '@mui/joy';
+import { Box, IconButton, styled, Typography } from '@mui/joy';
+import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
-import HighlightOffRoundedIcon from '@mui/icons-material/HighlightOffRounded';
 import LinkIcon from '@mui/icons-material/Link';
 import LinkOffIcon from '@mui/icons-material/LinkOff';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
+import RemoveCircleOutlineRoundedIcon from '@mui/icons-material/RemoveCircleOutlineRounded';
 import ReplayRoundedIcon from '@mui/icons-material/ReplayRounded';
 import StopRoundedIcon from '@mui/icons-material/StopRounded';
+import TelegramIcon from '@mui/icons-material/Telegram';
 
 import { ChatMessageMemo } from '../../apps/chat/components/message/ChatMessage';
 
@@ -17,16 +19,18 @@ import type { DLLMId } from '~/modules/llms/store-llms';
 import { GoodTooltip } from '~/common/components/GoodTooltip';
 import { useLLMSelect } from '~/common/components/forms/useLLMSelect';
 
-import { BeamStoreApi, useBeamStore } from './store-beam';
+import { BeamStoreApi, useBeamStore } from './store-beam.hooks';
+import { rayIsError, rayIsImported, rayIsScattering, rayIsSelectable, rayIsUserSelected } from './store-beam';
 
 
 // component configuration
 const SHOW_DRAG_HANDLE = false;
+const DEBUG_STATUS = false;
 
 
-const rayCardClasses = {
-  active: 'beamRay-Active',
-} as const;
+// const rayCardClasses = {
+//   active: 'beamRay-Active',
+// } as const;
 
 export const RayCard = styled(Box)(({ theme }) => ({
   '--Card-padding': '1rem',
@@ -38,9 +42,11 @@ export const RayCard = styled(Box)(({ theme }) => ({
 
   padding: 'var(--Card-padding)',
 
-  [`&.${rayCardClasses.active}`]: {
-    boxShadow: 'inset 0 0 0 2px #00f, inset 0 0 0 4px #00a',
-  },
+  // [`&.${rayCardClasses.active}`]: {
+  //   boxShadow: 'inset 0 0 0 2px #00f, inset 0 0 0 4px #00a',
+  // },
+
+  position: 'relative',
 
   display: 'flex',
   flexDirection: 'column',
@@ -53,8 +59,78 @@ export const RayCard = styled(Box)(({ theme }) => ({
 RayCard.displayName = 'RayCard';
 
 
+function rayCardStatusSx(isError: boolean, isSelectable: boolean, isSelected: boolean): SxProps | null {
+  if (isError)
+    return { backgroundColor: 'danger.softBg', borderColor: 'danger.outlinedBorder' };
+  if (isSelectable)
+    return { backgroundColor: isSelected ? 'success.softBg' : undefined, cursor: 'pointer' };
+  if (isSelected)
+    return { backgroundColor: 'success.softBg' };
+  return null;
+}
+
+
+const RayControlsMemo = React.memo(RayControls);
+
+function RayControls(props: {
+  isEmpty: boolean,
+  isLlmLinked: boolean,
+  isRemovable: boolean
+  isScattering: boolean,
+  llmComponent: React.ReactNode,
+  onLink: () => void,
+  onRemove: () => void,
+  onToggleGenerate: () => void,
+}) {
+  return <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+
+    {/* Drag Handle */}
+    {SHOW_DRAG_HANDLE && (
+      <div style={{ display: 'flex' }}>
+        <DragIndicatorIcon sx={{ fontSize: 'xl', my: 'auto' }} />
+      </div>
+    )}
+
+    <Box sx={{ flex: 1 }}>
+      {props.llmComponent}
+    </Box>
+
+    {!props.isLlmLinked && (
+      <GoodTooltip title={props.isLlmLinked ? undefined : 'Link Model'}>
+        <IconButton disabled={props.isLlmLinked || props.isScattering} size='sm' onClick={props.onLink}>
+          {props.isLlmLinked ? <LinkIcon /> : <LinkOffIcon />}
+        </IconButton>
+      </GoodTooltip>
+    )}
+
+    {!props.isScattering ? (
+      <GoodTooltip title='Generate'>
+        <IconButton size='sm' variant='plain' color='success' onClick={props.onToggleGenerate}>
+          {props.isEmpty ? <PlayArrowRoundedIcon /> : <ReplayRoundedIcon />}
+        </IconButton>
+      </GoodTooltip>
+    ) : (
+      <GoodTooltip title='Stop'>
+        <IconButton size='sm' variant='plain' color='danger' onClick={props.onToggleGenerate}>
+          <StopRoundedIcon />
+        </IconButton>
+      </GoodTooltip>
+    )}
+
+    {props.isRemovable && (
+      <GoodTooltip title='Remove'>
+        <IconButton disabled={!props.isRemovable} size='sm' variant='plain' color='neutral' onClick={props.onRemove}>
+          <RemoveCircleOutlineRoundedIcon />
+        </IconButton>
+      </GoodTooltip>
+    )}
+  </Box>;
+}
+
+
 const chatMessageEmbeddedSx: SxProps = {
   // style: to undo the style of ChatMessage
+  backgroundColor: 'none',
   border: 'none',
   mx: -1.5, // compensates for the marging (e.g. RenderChatText, )
   my: 0,
@@ -63,106 +139,85 @@ const chatMessageEmbeddedSx: SxProps = {
 } as const;
 
 
-function StartStopButton(props: { isStarted: boolean, isFirstTime: boolean, onToggleGenerate: () => void }) {
-  return !props.isStarted ? (
-    <GoodTooltip title='Generate'>
-      <IconButton size='sm' variant='plain' color='success' onClick={props.onToggleGenerate}>
-        {props.isFirstTime ? <PlayArrowRoundedIcon /> : <ReplayRoundedIcon />}
-      </IconButton>
-    </GoodTooltip>
-  ) : (
-    <GoodTooltip title='Stop'>
-      <IconButton size='sm' variant='plain' color='danger' onClick={props.onToggleGenerate}>
-        <StopRoundedIcon />
-      </IconButton>
-    </GoodTooltip>
-  );
-}
-
-
 export function BeamRay(props: {
   beamStore: BeamStoreApi,
-  index: number,
+  rayId: string,
   isMobile: boolean,
+  isRemovable: boolean
   gatherLlmId: DLLMId | null,
 }) {
 
   // external state
-  const ray = useBeamStore(props.beamStore, (store) => store.rays[props.index] ?? null);
+  const ray = useBeamStore(props.beamStore, (store) => store.rays.find(ray => ray.rayId === props.rayId) ?? null);
 
   // derived state
-  const rayId = ray?.rayId || null;
-  const rayEmpty = !ray?.message?.updated;
-  const rayScattering = !!ray?.genAbortController;
-  const { removeRay, updateRay, toggleScattering } = props.beamStore.getState();
+  const isError = rayIsError(ray);
+  const isScattering = rayIsScattering(ray);
+  const isSelectable = rayIsSelectable(ray);
+  const isSelected = rayIsUserSelected(ray);
+  const isImported = rayIsImported(ray);
+  const showUseButton = isSelectable && !isScattering;
+  const { removeRay, toggleScattering, setRayLlmId } = props.beamStore.getState();
 
-  const isLlmLinked = !!props.gatherLlmId && !ray.scatterLlmId;
-  const rayLlmId = isLlmLinked ? props.gatherLlmId : ray?.scatterLlmId || null;
-  const setRayLlmId = React.useCallback((llmId: DLLMId | null) => {
-    return rayId && updateRay(rayId, { scatterLlmId: llmId });
-  }, [rayId, updateRay]);
-  const clearRayLlmId = React.useCallback(() => setRayLlmId(null), [setRayLlmId]);
-  const [_rayLlm, rayLlmComponent] = useLLMSelect(
-    rayLlmId, setRayLlmId,
-    '', true, rayScattering,
-  );
+  const isLlmLinked = !!props.gatherLlmId && !ray?.scatterLlmId;
+  const llmId: DLLMId | null = isLlmLinked ? props.gatherLlmId : ray?.scatterLlmId || null;
+  const setLlmId = React.useCallback((llmId: DLLMId | null) => setRayLlmId(props.rayId, llmId), [props.rayId, setRayLlmId]);
+  const handleLlmLink = React.useCallback(() => setLlmId(null), [setLlmId]);
+  const [_, llmComponent] = useLLMSelect(llmId, setLlmId, '', true, isScattering);
 
 
   // handlers
 
-  const handleRayToggleGenerate = React.useCallback(() => {
-    rayId && toggleScattering(rayId);
-  }, [rayId, toggleScattering]);
+  const handleRayUse = React.useCallback(() => {
+    // get snapshot values, so we don't have to react to the hook
+    const { rays, onSuccessCallback } = props.beamStore.getState();
+    const ray = rays.find(ray => ray.rayId === props.rayId);
+    if (ray?.message?.text && onSuccessCallback) {
+      onSuccessCallback(ray.message.text, llmId || '');
+    }
+  }, [llmId, props.beamStore, props.rayId]);
 
-  const handleRemoveRay = React.useCallback(() => {
-    rayId && removeRay(rayId);
-  }, [rayId, removeRay]);
+  const handleRayRemove = React.useCallback(() => {
+    removeRay(props.rayId);
+  }, [props.rayId, removeRay]);
+
+  const handleRayToggleGenerate = React.useCallback(() => {
+    toggleScattering(props.rayId);
+  }, [props.rayId, toggleScattering]);
+
+  /*const handleRayToggleSelect = React.useCallback(() => {
+    toggleUserSelection(props.rayId);
+  }, [props.rayId, toggleUserSelection]);*/
 
 
   return (
-    <RayCard>
+    <RayCard
+      // onClick={isSelectable ? handleRayToggleSelect : undefined}
+      sx={rayCardStatusSx(isError, false /*isSelectable*/, false /*isSelected*/)}
+    >
+
+      {DEBUG_STATUS && (
+        <Typography level='body-sm'>
+          {ray?.status}
+        </Typography>
+      )}
 
       {/* Controls Row */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        {/* Drag */}
-        {SHOW_DRAG_HANDLE && (
-          <IconButton disabled size='sm' sx={undefined /*{ ml: 'calc(-0.5 * var(--Card-padding))' }*/}>
-            <DragIndicatorIcon />
-          </IconButton>
-        )}
-
-        {/* LLM Selector*/}
-        <Box sx={{ flex: 1 }}>
-          {rayLlmComponent}
-        </Box>
-        {/* Linker */}
-        {!isLlmLinked && (
-          <GoodTooltip title={isLlmLinked ? undefined : 'Link Model'}>
-            <IconButton disabled={isLlmLinked || rayScattering} size='sm' onClick={clearRayLlmId}>
-              {isLlmLinked ? <LinkIcon /> : <LinkOffIcon />}
-            </IconButton>
-          </GoodTooltip>
-        )}
-
-        {/* Start / Stop */}
-        <StartStopButton
-          isStarted={rayScattering}
-          isFirstTime={rayEmpty}
-          onToggleGenerate={handleRayToggleGenerate}
-        />
-
-        {/* Remove */}
-        <GoodTooltip title='Remove'>
-          <IconButton size='sm' variant='plain' color='neutral' onClick={handleRemoveRay}>
-            <HighlightOffRoundedIcon />
-            {/*<RemoveCircleOutlineRoundedIcon />*/}
-          </IconButton>
-        </GoodTooltip>
-      </Box>
+      <RayControlsMemo
+        isEmpty={!isSelectable}
+        isLlmLinked={isLlmLinked}
+        isRemovable={props.isRemovable}
+        isScattering={isScattering}
+        llmComponent={llmComponent}
+        onLink={handleLlmLink}
+        onRemove={handleRayRemove}
+        onToggleGenerate={handleRayToggleGenerate}
+      />
 
       {/* Ray Message */}
-      {(!!ray.message && !rayEmpty) && (
+      {(!!ray?.message?.text || ray?.status === 'scattering') && (
         <Box sx={{
+          minHeight: '1.5rem',
           display: 'flex',
           flexDirection: 'column',
           // uncomment the following to limit the message height
@@ -180,6 +235,41 @@ export function BeamRay(props: {
         </Box>
       )}
 
+      {/* Use Ray */}
+      {showUseButton && (
+        <Box sx={{ mt: 'auto', mb: -1, mr: -1, placeSelf: 'end', height: 'calc(2.5rem - var(--Pad_2))', position: 'relative' }}>
+          <GoodTooltip title='Choose this message'>
+            <IconButton
+              size='sm'
+              variant='plain'
+              color='success'
+              disabled={isImported || isScattering}
+              onClick={handleRayUse}
+              sx={{
+                position: 'absolute',
+                bottom: 0,
+                right: 0,
+                fontSize: 'xs',
+                px: isImported ? 1 : undefined,
+              }}
+            >
+              {ray?.imported ? 'Original' : /*'Use'*/ <TelegramIcon />}
+            </IconButton>
+          </GoodTooltip>
+        </Box>
+      )}
+
+      {/* Readiness | Selection indicator */}
+      {isSelected && (
+        <Box sx={{
+          display: 'flex',
+          position: 'absolute',
+          bottom: '0.5rem',
+          right: '0.5rem',
+        }}>
+          <CheckCircleOutlineRoundedIcon sx={{ fontSize: 'md', color: 'success.solidBg' }} />
+        </Box>
+      )}
     </RayCard>
   );
 }
