@@ -8,11 +8,13 @@ import { ChatMessageMemo } from '../../apps/chat/components/message/ChatMessage'
 
 import { animationEnterScaleUp } from '~/common/util/animUtils';
 import { useLLMSelect } from '~/common/components/forms/useLLMSelect';
+import { useUICounter } from '~/common/state/store-ui';
 
 import { BeamPaneGather } from './BeamPaneGather';
 import { BeamPaneScatter } from './BeamPaneScatter';
 import { BeamRayGrid, DEF_RAY_COUNT } from './BeamRayGrid';
 import { BeamStoreApi, useBeamStore } from './store-beam.hooks';
+import { BeamExplainer } from './BeamExplainer';
 
 
 const userMessageSx: SxProps = {
@@ -22,7 +24,8 @@ const userMessageSx: SxProps = {
   borderTop: 'none',
   borderTopLeftRadius: 0,
   borderTopRightRadius: 0,
-  px: '0.5rem',
+  // px: '0.5rem',
+  pr: '0.125rem',
   // boxShadow: 'sm',
   // the following make it end-aligned
   // borderBottomRightRadius: 0,
@@ -49,10 +52,15 @@ const assistantMessageSx: SxProps = {
 export function BeamView(props: {
   beamStore: BeamStoreApi,
   isMobile: boolean,
-  sx?: SxProps
+  showExplainer?: boolean,
+  sx?: SxProps,
 }) {
 
+  // state
+  const [showHistoryMessage, setShowHistoryMessage] = React.useState(true);
+
   // linked state
+  const { novel: explainerUnseen, touch: explainerCompleted, forget: explainerShow } = useUICounter('beam-wizard');
   const rayIds = useBeamStore(props.beamStore, useShallow(state => state.rays.map(ray => ray.rayId)));
   const raysCount = rayIds.length;
   const {
@@ -71,8 +79,8 @@ export function BeamView(props: {
     readyGather: state.readyGather,
     isGathering: state.isGathering,
   })));
-  const { setRayCount, startScatteringAll, stopScatteringAll, setGatherLlmId, terminate } = props.beamStore.getState();
-  const [_gatherLlm, gatherLlmComponent] = useLLMSelect(gatherLlmId, setGatherLlmId, props.isMobile ? '' : 'Beam Model');
+  const { editHistoryMessage, setRayCount, startScatteringAll, stopScatteringAll, setGatherLlmId, terminate } = props.beamStore.getState();
+  const [_gatherLlm, gatherLlmComponent] = useLLMSelect(gatherLlmId, setGatherLlmId, props.isMobile ? '' : 'Beam and Merge Model');
 
 
   // configuration
@@ -98,17 +106,19 @@ export function BeamView(props: {
   const otherHistoryCount = Math.max(0, (inputHistory?.length || 0) - 1);
   const isFirstMessageSystem = inputHistory?.[0]?.role === 'system';
   const userMessageDecorator = React.useMemo(() => {
-    return (otherHistoryCount >= 1) ? (
-      <Typography level='body-xs' sx={{ my: 1.5, opacity: 0.8 }}>
-        {otherHistoryCount === 1 ? (isFirstMessageSystem ? '1 system message' : '1 message') : `${otherHistoryCount} messages`} before
+    return (otherHistoryCount >= 1 && showHistoryMessage) ? (
+      <Typography level='body-xs' sx={{ my: 1.5, opacity: 0.9 }} onClick={() => setShowHistoryMessage(on => !on)}>
+        ... {otherHistoryCount === 1 ? (isFirstMessageSystem ? '1 system message' : '1 message') : `${otherHistoryCount} messages`} before ...
       </Typography>
     ) : null;
-  }, [isFirstMessageSystem, otherHistoryCount]);
+  }, [isFirstMessageSystem, otherHistoryCount, showHistoryMessage]);
 
+  if (props.showExplainer && explainerUnseen)
+    return <BeamExplainer onWizardComplete={explainerCompleted} sx={props.sx} />;
 
   return (
     <Box sx={{
-      '--Pad': { xs: '1rem', md: '1.5rem', xl: '1.5rem' },
+      '--Pad': { xs: '1rem', md: '1.5rem' },
       '--Pad_2': 'calc(var(--Pad) / 2)',
 
       // enter animation
@@ -137,6 +147,7 @@ export function BeamView(props: {
         startBusy={isScattering}
         onStart={startScatteringAll}
         onStop={stopScatteringAll}
+        onExplainerShow={explainerShow}
       />
 
       {/* User Message */}
@@ -148,9 +159,10 @@ export function BeamView(props: {
           <ChatMessageMemo
             message={lastMessage}
             fitScreen={props.isMobile}
-            showAvatar={false}
+            showAvatar={true}
             adjustContentScaling={-1}
             topDecorator={userMessageDecorator}
+            onMessageEdit={editHistoryMessage}
             sx={userMessageSx}
           />
         </Box>

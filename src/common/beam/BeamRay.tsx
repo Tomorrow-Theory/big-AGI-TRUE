@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 import type { SxProps } from '@mui/joy/styles/types';
-import { Box, IconButton, styled, Typography } from '@mui/joy';
+import { Box, IconButton, styled, SvgIconProps, Typography } from '@mui/joy';
 import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import LinkIcon from '@mui/icons-material/Link';
@@ -59,6 +59,18 @@ export const RayCard = styled(Box)(({ theme }) => ({
 RayCard.displayName = 'RayCard';
 
 
+/*const letterSx: SxProps = {
+  width: '1rem',
+  py: 0.25,
+  fontSize: 'xs',
+  backgroundColor: 'background.popup',
+  border: '1px solid',
+  borderColor: 'divider',
+  borderRadius: 'xs',
+  textAlign: 'center',
+};*/
+
+
 function rayCardStatusSx(isError: boolean, isSelectable: boolean, isSelected: boolean): SxProps | null {
   if (isError)
     return { backgroundColor: 'danger.softBg', borderColor: 'danger.outlinedBorder' };
@@ -73,11 +85,13 @@ function rayCardStatusSx(isError: boolean, isSelectable: boolean, isSelected: bo
 const RayControlsMemo = React.memo(RayControls);
 
 function RayControls(props: {
+  // rayIndex: number
   isEmpty: boolean,
   isLlmLinked: boolean,
-  isRemovable: boolean
+  isRemovable: boolean,
   isScattering: boolean,
   llmComponent: React.ReactNode,
+  llmVendorIcon?: React.FunctionComponent<SvgIconProps>,
   onLink: () => void,
   onRemove: () => void,
   onToggleGenerate: () => void,
@@ -89,6 +103,14 @@ function RayControls(props: {
       <div style={{ display: 'flex' }}>
         <DragIndicatorIcon sx={{ fontSize: 'xl', my: 'auto' }} />
       </div>
+    )}
+
+    {/*<Box sx={letterSx}>*/}
+    {/*  {String.fromCharCode(65 + props.rayIndex)}*/}
+    {/*</Box>*/}
+
+    {props.llmVendorIcon && (
+      <props.llmVendorIcon sx={{ fontSize: 'lg', my: 'auto' }} />
     )}
 
     <Box sx={{ flex: 1 }}>
@@ -142,6 +164,7 @@ const chatMessageEmbeddedSx: SxProps = {
 export function BeamRay(props: {
   beamStore: BeamStoreApi,
   rayId: string,
+  // rayIndex: number,
   isMobile: boolean,
   isRemovable: boolean
   gatherLlmId: DLLMId | null,
@@ -163,7 +186,7 @@ export function BeamRay(props: {
   const llmId: DLLMId | null = isLlmLinked ? props.gatherLlmId : ray?.scatterLlmId || null;
   const setLlmId = React.useCallback((llmId: DLLMId | null) => setRayLlmId(props.rayId, llmId), [props.rayId, setRayLlmId]);
   const handleLlmLink = React.useCallback(() => setLlmId(null), [setLlmId]);
-  const [_, llmComponent] = useLLMSelect(llmId, setLlmId, '', true, isScattering);
+  const [_, llmComponent, llmVendorIcon] = useLLMSelect(llmId, setLlmId, '', true, isScattering);
 
 
   // handlers
@@ -204,11 +227,13 @@ export function BeamRay(props: {
 
       {/* Controls Row */}
       <RayControlsMemo
+        // rayIndex={props.rayIndex}
         isEmpty={!isSelectable}
         isLlmLinked={isLlmLinked}
         isRemovable={props.isRemovable}
         isScattering={isScattering}
         llmComponent={llmComponent}
+        llmVendorIcon={llmVendorIcon}
         onLink={handleLlmLink}
         onRemove={handleRayRemove}
         onToggleGenerate={handleRayToggleGenerate}

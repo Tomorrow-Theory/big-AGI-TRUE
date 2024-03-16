@@ -125,7 +125,6 @@ export function AppChat() {
     prependNewConversation,
     branchConversation,
     deleteConversations,
-    setMessages,
   } = useConversation(focusedPaneConversationId);
 
   const { mayWork: capabilityHasT2I } = useCapabilityTextToImage();
@@ -228,10 +227,12 @@ export function AppChat() {
             return;
 
           case 'mode-beam':
+            if (chatCommand.isError)
+              return cHandler.messagesReplace(history);
             // remove '/beam ', as we want to be a user chat message
             Object.assign(lastMessage, { text: chatCommand.params || '' });
             cHandler.messagesReplace(history);
-            return ConversationsManager.getHandler(conversationId).beamGenerate(history);
+            return ConversationsManager.getHandler(conversationId).beamInvoke(history, [], null);
 
           default:
             return cHandler.messagesReplace([...history, createDMessage('assistant', 'This command is not supported.')]);
@@ -255,7 +256,7 @@ export function AppChat() {
 
       case 'generate-text-beam':
         cHandler.messagesReplace(history);
-        return cHandler.beamGenerate(history);
+        return cHandler.beamInvoke(history, [], null);
 
       case 'append-user':
         return cHandler.messagesReplace(history);
@@ -331,9 +332,9 @@ export function AppChat() {
     if (focusedConversation?.messages?.length) {
       const lastMessage = focusedConversation.messages[focusedConversation.messages.length - 1];
       if (lastMessage.role === 'assistant')
-        ConversationsManager.getHandler(focusedConversation.id).beamReplaceMessage(focusedConversation.messages.slice(0, -1), [lastMessage], lastMessage.id);
+        ConversationsManager.getHandler(focusedConversation.id).beamInvoke(focusedConversation.messages.slice(0, -1), [lastMessage], lastMessage.id);
       else if (lastMessage.role === 'user')
-        ConversationsManager.getHandler(focusedConversation.id).beamGenerate(focusedConversation.messages);
+        ConversationsManager.getHandler(focusedConversation.id).beamInvoke(focusedConversation.messages, [], null);
     }
   }, [focusedPaneConversationId]);
 
@@ -404,10 +405,10 @@ export function AppChat() {
 
   const handleConfirmedClearConversation = React.useCallback(() => {
     if (clearConversationId) {
-      setMessages(clearConversationId, []);
+      ConversationsManager.getHandler(clearConversationId).messagesReplace([]);
       setClearConversationId(null);
     }
-  }, [clearConversationId, setMessages]);
+  }, [clearConversationId]);
 
   const handleConversationClear = React.useCallback((conversationId: DConversationId) => setClearConversationId(conversationId), []);
 
@@ -451,7 +452,7 @@ export function AppChat() {
     ['o', true, true, false, handleOpenChatLlmOptions],
     ['+', true, true, false, useUIPreferencesStore.getState().increaseContentScaling],
     ['-', true, true, false, useUIPreferencesStore.getState().decreaseContentScaling],
-  ], [focusedPaneConversationId, handleConversationBranch, handleConversationClear, handleConversationNewInFocusedPane, handleDeleteConversations, handleMessageRegenerateLastInFocusedPane, handleNavigateHistoryInFocusedPane, handleOpenChatLlmOptions, isFocusedChatEmpty]);
+  ], [focusedPaneConversationId, handleConversationBranch, handleConversationClear, handleConversationNewInFocusedPane, handleDeleteConversations, handleMessageBeamLastInFocusedPane, handleMessageRegenerateLastInFocusedPane, handleNavigateHistoryInFocusedPane, handleOpenChatLlmOptions, isFocusedChatEmpty]);
   useGlobalShortcuts(shortcuts);
 
 
@@ -545,10 +546,11 @@ export function AppChat() {
                 borderRadius: '0.375rem',
                 border: `2px solid ${_paneIsFocused
                   ? ((willMulticast || !isMultiConversationId) ? theme.palette.primary.solidBg : theme.palette.primary.solidBg)
-                  : ((willMulticast || !isMultiConversationId) ? theme.palette.warning.softActiveBg : theme.palette.background.level1)}`,
-                filter: (!willMulticast && !_paneIsFocused)
-                  ? (!isMultiConversationId ? 'grayscale(66.67%)' /* clone of the same */ : 'grayscale(66.67%)')
-                  : undefined,
+                  : ((willMulticast || !isMultiConversationId) ? theme.palette.primary.softActiveBg : theme.palette.background.level1)}`,
+                // DISABLED on 2024-03-13, it gets in the way quite a lot
+                // filter: (!willMulticast && !_paneIsFocused)
+                //   ? (!isMultiConversationId ? 'grayscale(66.67%)' /* clone of the same */ : 'grayscale(66.67%)')
+                //   : undefined,
               } : {
                 // NOTE: this is a workaround for the 'stuck-after-collapse-close' issue. We will collapse the 'other' pane, which
                 // will get it removed (onCollapse), and somehow this pane will be stuck with a pointerEvents: 'none' style, which de-facto
@@ -610,9 +612,9 @@ export function AppChat() {
               <BeamView
                 beamStore={_paneChatBeamStore}
                 isMobile={isMobile}
+                showExplainer
                 sx={{
                   backgroundColor: 'background.level1',
-                  boxShadow: 'lg',
                   position: 'absolute',
                   inset: 0,
                   zIndex: themeZIndexBeamView, // stay on top of Message > Chips (:1), and Overlays (:2) - note: Desktop Drawer (:26)
@@ -649,7 +651,7 @@ export function AppChat() {
       sx={beamOpenStoreInFocusedPane ? {
         display: 'none',
       } : {
-        zIndex: 51, // just to allocate a surface, and potentially have a shadow
+        zIndex: 21, // just to allocate a surface, and potentially have a shadow
         backgroundColor: themeBgAppChatComposer,
         borderTop: `1px solid`,
         borderTopColor: 'divider',
