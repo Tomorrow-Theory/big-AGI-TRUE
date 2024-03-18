@@ -1,22 +1,60 @@
 import { keyframes } from '@emotion/react';
 
 
-export const animationColorBeamScatter = keyframes`
+export const animationColorBeamScatterINV = keyframes`
     100%, 0% {
-        //color: rgb(183, 255, 0);
         color: rgb(219, 255, 77);
     }
     25% {
-        //color: rgb(255, 251, 0);
         color: rgb(255, 255, 128);
     }
     50% {
-        //color: rgba(0, 255, 81);
         color: rgba(128, 255, 153);
     }
     75% {
-        //color: rgb(255, 153, 0);
         color: rgb(255, 204, 77);
+    }`;
+
+export const animationColorBeamScatter = keyframes`
+    100%, 0% {
+        color: rgb(85, 140, 47); // A rich, dark green
+    }
+    25% {
+        color: rgb(75, 115, 35); // A slightly desaturated green for contrast
+    }
+    50% {
+        color: rgba(65, 155, 55); // A brighter, more saturated green with slight transparency
+    }
+    75% {
+        color: rgb(95, 130, 40); // A blend between the first and third colors for a smooth transition
+    }`;
+
+export const animationColorBeamGather = keyframes`
+    100%, 0% {
+        color: rgb(102, 0, 51);
+    }
+    25% {
+        color: rgb(76, 0, 76);
+    }
+    50% {
+        color: rgb(63, 0, 128);
+    }
+    75% {
+        color: rgb(0, 0, 128);
+    }`;
+
+export const animationColorBlues = keyframes`
+    0%, 100% {
+        color: #636B74; /* Neutral main color (500) */
+    }
+    25% {
+        color: #12467B; /* Primary darker shade (700) */
+    }
+    50% {
+        color: #0B6BCB; /* Primary main color (500) */
+    }
+    75% {
+        color: #083e75; /* Primary lighter shade (300) */
     }`;
 
 /*export const animationColorLimey = keyframes`
@@ -33,35 +71,6 @@ export const animationColorBeamScatter = keyframes`
         color: rgb(255, 153, 0);
     }`;
 */
-
-export const animationColorBeamGather = keyframes`
-    100%, 0% {
-        background-color: rgb(102, 0, 51);
-    }
-    25% {
-        background-color: rgb(76, 0, 76);
-    }
-    50% {
-        background-color: rgb(63, 0, 128);
-    }
-    75% {
-        background-color: rgb(0, 0, 128);
-    }`;
-
-
-export const animationColorBlues = keyframes`
-    0%, 100% {
-        color: #636B74; /* Neutral main color (500) */
-    }
-    25% {
-        color: #12467B; /* Primary darker shade (700) */
-    }
-    50% {
-        color: #0B6BCB; /* Primary main color (500) */
-    }
-    75% {
-        color: #083e75; /* Primary lighter shade (300) */
-    }`;
 
 export const animationColorRainbow = keyframes`
     100%, 0% {
@@ -101,7 +110,22 @@ export const animationColorRainbow = keyframes`
         color: rgb(204, 0, 102);
     }`;
 
-/*export const animationColorDarkerRainbow = keyframes`
+
+export const animationBackgroundBeamGather = keyframes`
+    100%, 0% {
+        background-color: rgb(102, 0, 51);
+    }
+    25% {
+        background-color: rgb(76, 0, 76);
+    }
+    50% {
+        background-color: rgb(63, 0, 128);
+    }
+    75% {
+        background-color: rgb(0, 0, 128);
+    }`;
+
+/*export const animationBackgroundDarkerRainbow = keyframes`
     100%, 0% {
         background-color: rgb(128, 0, 0);
     }
@@ -139,6 +163,7 @@ export const animationColorRainbow = keyframes`
         background-color: rgb(102, 0, 51);
     }`;*/
 
+
 export const animationEnterBelow = keyframes`
     from {
         opacity: 0;
@@ -152,13 +177,13 @@ export const animationEnterBelow = keyframes`
 
 export const animationEnterScaleUp = keyframes`
     0% {
-        opacity: 0;
+        //opacity: 0;
         //transform: translateY(8px);
         scale: 0.98;
         //rotate: -5deg;
     }
     100% {
-        opacity: 1;
+        //opacity: 1;
         //transform: translateY(0);
         scale: 1;
         //rotate: 0;

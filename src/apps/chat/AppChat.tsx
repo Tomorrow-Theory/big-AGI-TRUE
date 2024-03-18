@@ -11,15 +11,16 @@ import { imaginePromptFromText } from '~/modules/aifn/imagine/imaginePromptFromT
 import { speakText } from '~/modules/elevenlabs/elevenlabs.client';
 import { useCapabilityTextToImage } from '~/modules/t2i/t2i.client';
 
-import { BeamView } from '~/common/beam/BeamView';
 import { ConfirmationModal } from '~/common/components/ConfirmationModal';
 import { ConversationsManager } from '~/common/chats/ConversationsManager';
 import { GlobalShortcutItem, ShortcutKeyName, useGlobalShortcuts } from '~/common/components/useGlobalShortcut';
 import { PanelResizeInset } from '~/common/components/panes/GoodPanelResizeHandler';
+import { ScrollToBottom } from '~/common/scroll-to-bottom/ScrollToBottom';
+import { ScrollToBottomButton } from '~/common/scroll-to-bottom/ScrollToBottomButton';
 import { addSnackbar, removeSnackbar } from '~/common/components/useSnackbarsStore';
 import { createDMessage, DConversationId, DMessage, getConversation, getConversationSystemPurposeId, useConversation } from '~/common/state/store-chats';
 import { getUXLabsHighPerformance, useUXLabsStore } from '~/common/state/store-ux-labs';
-import { themeBgAppChatComposer, themeZIndexBeamView } from '~/common/app.theme';
+import { themeBgAppChatComposer } from '~/common/app.theme';
 import { useAreBeamsOpen } from '~/common/beam/store-beam.hooks';
 import { useFolderStore } from '~/common/state/store-folders';
 import { useIsMobile } from '~/common/components/useMatchMedia';
@@ -30,12 +31,11 @@ import type { ComposerOutputMultiPart } from './components/composer/composer.typ
 import { ChatBarAltBeam } from './components/ChatBarAltBeam';
 import { ChatBarAltTitle } from './components/ChatBarAltTitle';
 import { ChatBarDropdowns } from './components/ChatBarDropdowns';
+import { ChatBeamWrapper } from './components/ChatBeamWrapper';
 import { ChatDrawerMemo } from './components/ChatDrawer';
 import { ChatMessageList } from './components/ChatMessageList';
 import { ChatPageMenuItems } from './components/ChatPageMenuItems';
 import { Composer } from './components/composer/Composer';
-import { ScrollToBottom } from './components/scroll-to-bottom/ScrollToBottom';
-import { ScrollToBottomButton } from './components/scroll-to-bottom/ScrollToBottomButton';
 import { getInstantAppChatPanesCount, usePanesManager } from './components/panes/usePanesManager';
 
 import { extractChatCommand, findAllChatCommands } from './commands/commands.registry';
@@ -461,11 +461,11 @@ export function AppChat() {
   const barAltTitle = showAltTitleBar ? focusedChatTitle ?? 'No Chat' : null;
 
   const focusedBarContent = React.useMemo(() => beamOpenStoreInFocusedPane
-      ? <ChatBarAltBeam beamStore={beamOpenStoreInFocusedPane} />
+      ? <ChatBarAltBeam beamStore={beamOpenStoreInFocusedPane} isMobile={isMobile} />
       : (barAltTitle === null)
         ? <ChatBarDropdowns conversationId={focusedPaneConversationId} />
         : <ChatBarAltTitle conversationId={focusedPaneConversationId} conversationTitle={barAltTitle} />
-    , [barAltTitle, beamOpenStoreInFocusedPane, focusedPaneConversationId],
+    , [barAltTitle, beamOpenStoreInFocusedPane, focusedPaneConversationId, isMobile],
   );
 
   const drawerContent = React.useMemo(() =>
@@ -564,13 +564,8 @@ export function AppChat() {
 
             <ScrollToBottom
               bootToBottom
-              stickToBottom
-              sx={{
-                // allows the content to be scrolled (all browsers)
-                overflowY: 'auto',
-                // actually make sure this scrolls & fills
-                height: '100%',
-              }}
+              stickToBottomInitial
+              sx={_paneChatBeamIsOpen ? { display: 'none' } : undefined}
             >
 
               <ChatMessageList
@@ -608,19 +603,7 @@ export function AppChat() {
             </ScrollToBottom>
 
             {(_paneChatBeamIsOpen && !!_paneChatBeamStore) && (
-              // <Modal open onClose={() => console.log('CLOSE!')}>
-              <BeamView
-                beamStore={_paneChatBeamStore}
-                isMobile={isMobile}
-                showExplainer
-                sx={{
-                  backgroundColor: 'background.level1',
-                  position: 'absolute',
-                  inset: 0,
-                  zIndex: themeZIndexBeamView, // stay on top of Message > Chips (:1), and Overlays (:2) - note: Desktop Drawer (:26)
-                }}
-              />
-              // </Modal>
+              <ChatBeamWrapper beamStore={_paneChatBeamStore} isMobile={isMobile} />
             )}
 
           </Panel>
