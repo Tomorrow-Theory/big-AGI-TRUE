@@ -1,71 +1,20 @@
 import * as React from 'react';
 import { useShallow } from 'zustand/react/shallow';
-
-import type { SxProps } from '@mui/joy/styles/types';
-import { Alert, Box, Typography } from '@mui/joy';
-
-import { ChatMessageMemo } from '../../apps/chat/components/message/ChatMessage';
+import { Alert, Box } from '@mui/joy';
 
 import { ScrollToBottom } from '~/common/scroll-to-bottom/ScrollToBottom';
 import { animationEnterScaleUp } from '~/common/util/animUtils';
 import { useLLMSelect } from '~/common/components/forms/useLLMSelect';
 import { useUICounter } from '~/common/state/store-ui';
 
-import { BEAM_INVERT_USER_MESSAGE, SCATTER_RAY_DEF } from './beam.config';
 import { BeamExplainer } from './BeamExplainer';
-import { BeamPaneGather } from './BeamPaneGather';
-import { BeamPaneScatter } from './BeamPaneScatter';
-import { BeamRayGrid } from './BeamRayGrid';
+import { BeamGatherInput } from './gather/BeamGatherInput';
+import { BeamGatherPane } from './gather/BeamGatherPane';
+import { BeamRayGrid } from './scatter/BeamRayGrid';
+import { BeamScatterInput } from './scatter/BeamScatterInput';
+import { BeamScatterPane } from './scatter/BeamScatterPane';
 import { BeamStoreApi, useBeamStore } from './store-beam.hooks';
-
-
-const userMessageContainerSx: SxProps = {
-  pt: 'var(--Pad)',
-  px: 'var(--Pad)',
-  mb: 'calc(-1 * var(--Pad))',
-
-  // sticky user message, only displaced by the scatter controls
-  // NOTE: disabled: should feel good but feels weird
-  // position: 'sticky',
-  // top: 0,
-};
-
-const userMessageContainerInvertedSx: SxProps = {
-  ...userMessageContainerSx,
-  backgroundColor: 'neutral.solidBg',
-  pt: 0,
-};
-
-const userMessageSx: SxProps = {
-  border: '1px solid',
-  borderColor: 'primary.outlinedBorder',
-  borderRadius: 'md',
-  borderBottom: 'none',
-  borderBottomLeftRadius: 0,
-  borderBottomRightRadius: 0,
-  // px: '0.5rem',
-  pr: '0.125rem',
-  // boxShadow: 'sm',
-  // the following make it end-aligned
-  // borderBottomRightRadius: 0,
-  // borderRight: 'none',
-  // px: 'var(--Pad)',
-} as const;
-
-const assistantMessageSx: SxProps = {
-  backgroundColor: 'success.softBg',
-  border: '1px solid',
-  borderColor: 'neutral.outlinedBorder',
-  borderRadius: 'md',
-  borderBottom: 'none',
-  borderBottomLeftRadius: 0,
-  borderBottomRightRadius: 0,
-  px: '0.5rem',
-  // boxShadow: 'sm',
-  // the following make it start-aligned
-  // borderTopLeftRadius: 0,
-  // borderLeft: 'none',
-} as const;
+import { SCATTER_RAY_DEF } from './beam.config';
 
 
 export function BeamView(props: {
@@ -74,34 +23,31 @@ export function BeamView(props: {
   showExplainer?: boolean,
 }) {
 
-  // state
-  const [showHistoryMessage, setShowHistoryMessage] = React.useState(true);
-
   // linked state
   const { novel: explainerUnseen, touch: explainerCompleted, forget: explainerShow } = useUICounter('beam-wizard');
-  const rayIds = useBeamStore(props.beamStore, useShallow(state => state.rays.map(ray => ray.rayId)));
-  const raysCount = rayIds.length;
   const {
-    inputHistory, inputIssues,
-    mergeLlmId,
-    readyScatter, isScattering,
-    readyGather, isGathering,
-  } = useBeamStore(props.beamStore, useShallow((state) => ({
-    // state
-    inputHistory: state.inputHistory,
-    inputIssues: state.inputIssues,
-    mergeLlmId: state.mergeLlmId,
-    readyScatter: state.readyScatter,
-    isScattering: state.isScattering,
-    readyGather: state.readyGather,
-    isGathering: state.isGathering,
+    /* root */ editInputHistoryMessage,
+    /* scatter */ setRayCount, startScatteringAll, stopScatteringAll,
+    /* gather */ setFusionIndex, toggleGatherShowPrompts, setFusionLlmId, fusionStart, fusionStop,
+  } = props.beamStore.getState();
+  const {
+    /* root */ inputHistory, inputIssues, inputReady,
+    /* scatter */ isScattering, raysReady,
+    /* gather */ fusionIndex, gatherShowPrompts, fusionLlmId, isGathering,
+  } = useBeamStore(props.beamStore, useShallow(state => ({
+    inputHistory: state.inputHistory, inputIssues: state.inputIssues, inputReady: state.inputReady,
+    isScattering: state.isScattering, raysReady: state.raysReady,
+    fusionIndex: state.fusionIndex, gatherShowPrompts: state.gatherShowPrompts, fusionLlmId: state.fusionLlmId, isGathering: state.isGathering,
   })));
-  const { editInputHistoryMessage, setRayCount, startScatteringAll, stopScatteringAll, setMergeLlmId, terminate } = props.beamStore.getState();
-  const [_, mergeLlmComponent, mergeLlmVendorIcon] = useLLMSelect(mergeLlmId, setMergeLlmId, props.isMobile ? '' : 'Merge Model', true);
+  const rayIds = useBeamStore(props.beamStore, useShallow(state => state.rays.map(ray => ray.rayId)));
+  const [_, gatherLlmComponent, gatherLlmIcon] = useLLMSelect(fusionLlmId, setFusionLlmId, props.isMobile ? '' : 'Merge Model', true);
 
-  // configuration
 
-  const handleTerminate = React.useCallback(() => terminate(), [terminate]);
+  // derived state
+  const raysCount = rayIds.length;
+
+
+  // handlers
 
   const handleRaySetCount = React.useCallback((n: number) => setRayCount(n), [setRayCount]);
 
@@ -117,21 +63,11 @@ export function BeamView(props: {
   }, [bootup, handleRaySetCount]);
 
 
-  const lastMessage = inputHistory?.slice(-1)[0] || null;
-
-  const otherHistoryCount = Math.max(0, (inputHistory?.length || 0) - 1);
-  const isFirstMessageSystem = inputHistory?.[0]?.role === 'system';
-  const userMessageDecorator = React.useMemo(() => {
-    return (otherHistoryCount >= 1 && showHistoryMessage) ? (
-      <Typography level='body-xs' sx={{ my: 1.5, opacity: 0.9 }} onClick={() => setShowHistoryMessage(on => !on)}>
-        ... {otherHistoryCount === 1 ? (isFirstMessageSystem ? '1 system message' : '1 message') : `${otherHistoryCount} messages`} before ...
-      </Typography>
-    ) : null;
-  }, [isFirstMessageSystem, otherHistoryCount, showHistoryMessage]);
-
+  // Explainer, if unseen
   if (props.showExplainer && explainerUnseen)
     return <BeamExplainer onWizardComplete={explainerCompleted} />;
 
+  console.log('BeamView', props.beamStore.getState());
   return (
     <ScrollToBottom disableAutoStick>
 
@@ -158,69 +94,62 @@ export function BeamView(props: {
 
 
         {/* User Message */}
-        {!!lastMessage && (
-          <Box sx={BEAM_INVERT_USER_MESSAGE ? userMessageContainerInvertedSx : userMessageContainerSx}>
-            <ChatMessageMemo
-              message={lastMessage}
-              fitScreen={props.isMobile}
-              showAvatar={true}
-              adjustContentScaling={-1}
-              topDecorator={userMessageDecorator}
-              onMessageEdit={editInputHistoryMessage}
-              sx={userMessageSx}
-            />
-          </Box>
-        )}
+        <BeamScatterInput
+          isMobile={props.isMobile}
+          history={inputHistory}
+          editHistory={editInputHistoryMessage}
+        />
 
         {/* Scatter Controls */}
-        <BeamPaneScatter
+        <BeamScatterPane
           isMobile={props.isMobile}
           rayCount={raysCount}
           setRayCount={handleRaySetCount}
-          startEnabled={readyScatter}
+          startEnabled={inputReady}
           startBusy={isScattering}
           onStart={startScatteringAll}
           onStop={stopScatteringAll}
           onExplainerShow={explainerShow}
         />
 
+
         {/* Rays Grid */}
         <BeamRayGrid
           beamStore={props.beamStore}
-          linkedLlmId={mergeLlmId}
+          linkedLlmId={fusionLlmId}
           isMobile={props.isMobile}
           rayIds={rayIds}
           onIncreaseRayCount={handleRayIncreaseCount}
         />
 
-        {/* Gather Message */}
-        {/*{(!!gatherMessage && !!gatherMessage.updated) && (*/}
-        {/*  <Box sx={{*/}
-        {/*    px: 'var(--Pad)',*/}
-        {/*    mb: 'calc(-1 * var(--Pad))',*/}
-        {/*  }}>*/}
-        {/*    <ChatMessageMemo*/}
-        {/*      message={gatherMessage}*/}
-        {/*      fitScreen={props.isMobile}*/}
-        {/*      showAvatar={false}*/}
-        {/*      adjustContentScaling={-1}*/}
-        {/*      sx={assistantMessageSx}*/}
-        {/*    />*/}
-        {/*  </Box>*/}
-        {/*)}*/}
+
+        {/* Fusion Config */}
+        <BeamGatherInput
+          beamStore={props.beamStore}
+          gatherShowPrompts={gatherShowPrompts}
+        />
 
         {/* Gather Controls */}
-        <BeamPaneGather
-          gatherBusy={isGathering}
-          gatherCount={readyGather}
-          gatherEnabled={readyGather > 0 && !isScattering}
+        <BeamGatherPane
           isMobile={props.isMobile}
-          mergeLlmComponent={mergeLlmComponent}
-          mergeLlmVendorIcon={mergeLlmVendorIcon}
-          onStart={() => null}
-          onStop={() => null}
-          onClose={handleTerminate}
+          fusionIndex={fusionIndex}
+          setFusionIndex={setFusionIndex}
+          gatherBusy={isGathering}
+          gatherCount={raysReady}
+          gatherEnabled={raysReady >= 2 && !isGathering && fusionIndex !== null}
+          gatherLlmComponent={gatherLlmComponent}
+          gatherLlmIcon={gatherLlmIcon}
+          gatherShowPrompts={gatherShowPrompts}
+          toggleGatherShowPrompts={toggleGatherShowPrompts}
+          onFusionStart={fusionStart}
+          onFusionStop={fusionStop}
         />
+
+        {/* Fusion Output */}
+        {/*<BeamGatherOutput*/}
+        {/*  beamStore={props.beamStore}*/}
+        {/*  isMobile={props.isMobile}*/}
+        {/*/>*/}
 
       </Box>
 

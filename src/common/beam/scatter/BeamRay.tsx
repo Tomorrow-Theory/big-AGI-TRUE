@@ -1,8 +1,9 @@
 import * as React from 'react';
 
 import type { SxProps } from '@mui/joy/styles/types';
-import { Box, IconButton, styled, SvgIconProps } from '@mui/joy';
+import { Box, IconButton, SvgIconProps } from '@mui/joy';
 import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import LinkIcon from '@mui/icons-material/Link';
 import LinkOffIcon from '@mui/icons-material/LinkOff';
@@ -12,58 +13,31 @@ import ReplayRoundedIcon from '@mui/icons-material/ReplayRounded';
 import StopRoundedIcon from '@mui/icons-material/StopRounded';
 import TelegramIcon from '@mui/icons-material/Telegram';
 
-import { ChatMessageMemo } from '../../apps/chat/components/message/ChatMessage';
+import { ChatMessageMemo } from '../../../apps/chat/components/message/ChatMessage';
 
 import type { DLLMId } from '~/modules/llms/store-llms';
 
 import { GoodTooltip } from '~/common/components/GoodTooltip';
 import { InlineError } from '~/common/components/InlineError';
+import { copyToClipboard } from '~/common/util/clipboardUtils';
 import { useLLMSelect } from '~/common/components/forms/useLLMSelect';
 
-import { BeamStoreApi, useBeamStore } from './store-beam.hooks';
-import { SCATTER_RAY_SHOW_DRAG_HANDLE } from './beam.config';
-import { rayIsError, rayIsImported, rayIsScattering, rayIsSelectable, rayIsUserSelected } from './beam.rays';
+import { BeamCard, beamCardClasses } from '../BeamCard';
+import { BeamStoreApi, useBeamStore } from '../store-beam.hooks';
+import { SCATTER_RAY_SHOW_DRAG_HANDLE } from '../beam.config';
+
+import { rayIsError, rayIsImported, rayIsScattering, rayIsSelectable, rayIsUserSelected } from './beam.scatter';
 
 
-const rayCardClasses = {
-  errored: 'rayCard-Errored',
-  selectable: 'rayCard-Selectable',
+const chatMessageEmbeddedSx: SxProps = {
+  // style: to undo the style of ChatMessage
+  backgroundColor: 'none',
+  border: 'none',
+  mx: -1.5, // compensates for the marging (e.g. RenderChatText, )
+  my: 0,
+  px: 0,
+  py: 0,
 } as const;
-
-export const RayCard = styled(Box)(({ theme }) => ({
-  '--Card-padding': '1rem',
-
-  backgroundColor: theme.vars.palette.background.surface,
-  border: '1px solid',
-  borderColor: theme.vars.palette.neutral.outlinedBorder,
-  borderRadius: theme.radius.md,
-
-  padding: 'var(--Card-padding)',
-
-  // [`&.${rayCardClasses.active}`]: {
-  //   boxShadow: 'inset 0 0 0 2px #00f, inset 0 0 0 4px #00a',
-  // },
-
-  [`&.${rayCardClasses.selectable}`]: {
-    backgroundColor: theme.vars.palette.background.popup,
-  },
-  [`&.${rayCardClasses.errored}`]: {
-    backgroundColor: theme.vars.palette.danger.softBg,
-    borderColor: theme.vars.palette.danger.outlinedBorder,
-  },
-
-  position: 'relative',
-
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 'var(--Pad_2)',
-
-  // uncomment the following to limit the card height
-  // maxHeight: 'calc(0.8 * (100dvh - 16rem))',
-  // overflow: 'auto',
-}));
-RayCard.displayName = 'RayCard';
-
 
 /*const letterSx: SxProps = {
   width: '1rem',
@@ -145,17 +119,6 @@ function RayControls(props: {
 }
 
 
-const chatMessageEmbeddedSx: SxProps = {
-  // style: to undo the style of ChatMessage
-  backgroundColor: 'none',
-  border: 'none',
-  mx: -1.5, // compensates for the marging (e.g. RenderChatText, )
-  my: 0,
-  px: 0,
-  py: 0,
-} as const;
-
-
 export function BeamRay(props: {
   beamStore: BeamStoreApi,
   isMobile: boolean,
@@ -185,13 +148,19 @@ export function BeamRay(props: {
 
   // handlers
 
+  const handleRayCopy = React.useCallback(() => {
+    const { rays, onSuccessCallback } = props.beamStore.getState();
+    const ray = rays.find(ray => ray.rayId === props.rayId);
+    if (ray?.message?.text && onSuccessCallback)
+      copyToClipboard(ray.message.text, 'Beam');
+  }, [props.beamStore, props.rayId]);
+
   const handleRayUse = React.useCallback(() => {
     // get snapshot values, so we don't have to react to the hook
     const { rays, onSuccessCallback } = props.beamStore.getState();
     const ray = rays.find(ray => ray.rayId === props.rayId);
-    if (ray?.message?.text && onSuccessCallback) {
+    if (ray?.message?.text && onSuccessCallback)
       onSuccessCallback(ray.message.text, llmId || '');
-    }
   }, [llmId, props.beamStore, props.rayId]);
 
   const handleRayRemove = React.useCallback(() => {
@@ -208,9 +177,9 @@ export function BeamRay(props: {
 
 
   return (
-    <RayCard
+    <BeamCard
       // onClick={isSelectable ? handleRayToggleSelect : undefined}
-      className={`${isError ? rayCardClasses.errored : ''} ${isSelectable ? rayCardClasses.selectable : ''}`}
+      className={`${isError ? beamCardClasses.errored : ''} ${isSelectable ? beamCardClasses.selectable : ''}`}
     >
 
       {/* Controls Row */}
@@ -254,24 +223,39 @@ export function BeamRay(props: {
       {/* Use Ray */}
       {showUseButton && (
         <Box sx={{ mt: 'auto', mb: -1, mr: -1, placeSelf: 'end', height: 'calc(2.5rem - var(--Pad_2))', position: 'relative' }}>
-          <GoodTooltip title='Choose this message'>
-            <IconButton
-              size='sm'
-              variant='plain'
-              color='success'
-              disabled={isImported || isScattering}
-              onClick={handleRayUse}
-              sx={{
-                position: 'absolute',
-                bottom: 0,
-                right: 0,
-                fontSize: 'xs',
-                px: isImported ? 1 : undefined,
-              }}
-            >
-              {ray?.imported ? 'Original' : /*'Use'*/ <TelegramIcon />}
-            </IconButton>
-          </GoodTooltip>
+          <Box sx={{
+            position: 'absolute',
+            bottom: 0,
+            right: 0,
+            display: 'flex',
+            gap: 1,
+          }}>
+            {!isImported && (
+              <GoodTooltip title='Copy'>
+                <IconButton
+                  size='sm'
+                  onClick={handleRayCopy}
+                >
+                  <ContentCopyIcon sx={{ fontSize: 'md' }} />
+                </IconButton>
+              </GoodTooltip>
+            )}
+            <GoodTooltip title='Choose this message'>
+              <IconButton
+                size='sm'
+                color='success'
+                disabled={isImported || isScattering}
+                onClick={handleRayUse}
+                sx={{
+                  fontSize: 'xs',
+                  px: isImported ? 1 : undefined,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {isImported ? 'From Chat' : /*'Use'*/ <TelegramIcon />}
+              </IconButton>
+            </GoodTooltip>
+          </Box>
         </Box>
       )}
 
@@ -286,6 +270,6 @@ export function BeamRay(props: {
           <CheckCircleOutlineRoundedIcon sx={{ fontSize: 'md', color: 'success.solidBg' }} />
         </Box>
       )}
-    </RayCard>
+    </BeamCard>
   );
 }
