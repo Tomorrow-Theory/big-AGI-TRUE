@@ -64,8 +64,8 @@ export function BeamView(props: {
 
 
   // Explainer, if unseen
-  if (props.showExplainer && explainerUnseen)
-    return <BeamExplainer onWizardComplete={explainerCompleted} />;
+  //if (props.showExplainer && explainerUnseen)
+    //return <BeamExplainer onWizardComplete={explainerCompleted} />;
 
   console.log('BeamView', props.beamStore.getState());
   return (

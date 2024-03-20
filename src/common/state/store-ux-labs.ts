@@ -42,7 +42,7 @@ export const useUXLabsStore = create<UXLabsStore>()(
       labsChatBarAlt: false,
       setLabsChatBarAlt: (labsChatBarAlt: false | 'title') => set({ labsChatBarAlt }),
 
-      labsChatBeam: false,
+      labsChatBeam: true,
       setLabsChatBeam: (labsChatBeam: boolean) => set({ labsChatBeam }),
 
       labsHighPerformance: false,
