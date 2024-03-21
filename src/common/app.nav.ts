@@ -116,7 +116,7 @@ export const navItems: {
       route: '/draw',
       // hideOnMobile: true,
       hideDrawer: true,
-      isDev: true,
+      isDev: false,
       _delete: false,
     },
     {
