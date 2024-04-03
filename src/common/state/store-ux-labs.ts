@@ -36,7 +36,7 @@ export const useUXLabsStore = create<UXLabsStore>()(
       labsAttachScreenCapture: false,
       setLabsAttachScreenCapture: (labsAttachScreenCapture: boolean) => set({ labsAttachScreenCapture }),
 
-      labsBeam: true,
+      labsBeam: false,
       setLabsBeam: (labsBeam: boolean) => set({ labsBeam }),
 
       labsCameraDesktop: false,
@@ -45,12 +45,6 @@ export const useUXLabsStore = create<UXLabsStore>()(
       labsChatBarAlt: false,
       setLabsChatBarAlt: (labsChatBarAlt: false | 'title') => set({ labsChatBarAlt }),
 
-<<<<<<< HEAD
-      labsChatBeam: true,
-      setLabsChatBeam: (labsChatBeam: boolean) => set({ labsChatBeam }),
-
-=======
->>>>>>> upstream/main
       labsHighPerformance: false,
       setLabsHighPerformance: (labsHighPerformance: boolean) => set({ labsHighPerformance }),
 

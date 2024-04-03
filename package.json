@@ -1,11 +1,6 @@
 {
-<<<<<<< HEAD
   "name": "Aurora",
-  "version": "1.14.1",
-=======
-  "name": "big-agi",
-  "version": "1.15.0",
->>>>>>> upstream/main
+  "version": "1.15.1",
   "private": true,
   "author": "Tomorrow Theory",
   "repository": "https://github.com/gtertrais",
