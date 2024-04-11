@@ -14,7 +14,7 @@ import { AnthropicWireMessagesRequest, anthropicWireMessagesRequestSchema, Anthr
 import { hardcodedAnthropicModels } from './anthropic.models';
 
 
-// Default hosts
+// Default hosts 
 const DEFAULT_API_VERSION_HEADERS = {
   'anthropic-version': '2023-06-01',
   'anthropic-beta': 'messages-2023-12-15',
