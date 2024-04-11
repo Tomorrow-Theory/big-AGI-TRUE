@@ -9,35 +9,7 @@ import { wireTogetherAIListOutputSchema } from './togetherai.wiretypes';
 // [Azure] / [OpenAI]
 const _knownOpenAIChatModels: ManualMappings = [
   // GPT4 Vision
-  {
-    idPrefix: 'gpt-4-vision-preview',
-    label: 'GPT-4 Turbo · Vision',
-    description: 'GPT-4 Turbo model featuring improved instruction following, JSON mode, reproducible outputs, parallel function calling, and more. Returns a maximum of 4,096 output tokens.',
-    contextWindow: 128000,
-    maxCompletionTokens: 4096,
-    interfaces: [LLM_IF_OAI_Chat, LLM_IF_OAI_Fn, LLM_IF_OAI_Vision],
-    hidden: true, // because no 'image input' support yet
-    isLatest: true,
-  },
 
-  // GPT4 Turbo
-  {
-    idPrefix: 'gpt-4-0125-preview',
-    label: 'GPT-4 Turbo (0125)',
-    description: 'The latest GPT-4 model intended to reduce cases of “laziness” where the model doesn’t complete a task.',
-    contextWindow: 128000,
-    maxCompletionTokens: 4096,
-    interfaces: [LLM_IF_OAI_Chat, LLM_IF_OAI_Fn],
-    isLatest: true,
-  },
-  {
-    idPrefix: 'gpt-4-1106-preview',
-    label: 'GPT-4 Turbo (1106)',
-    description: '128k context, fresher knowledge, cheaper than GPT-4.',
-    contextWindow: 128000,
-    maxCompletionTokens: 4096,
-    interfaces: [LLM_IF_OAI_Chat, LLM_IF_OAI_Fn],
-  },
   {
     idPrefix: 'gpt-4-turbo-preview',
     label: 'GPT-4 Turbo',
@@ -56,6 +28,7 @@ const _knownOpenAIChatModels: ManualMappings = [
     label: 'GPT-4 32k (0613)',
     description: 'Snapshot of gpt-4-32 from June 13th 2023.',
     contextWindow: 32768,
+    hidden: true, // because no 'image input' support yet
     interfaces: [LLM_IF_OAI_Chat],
     isLatest: true,
   },
@@ -85,7 +58,7 @@ const _knownOpenAIChatModels: ManualMappings = [
     description: 'Snapshot of gpt-4 from June 13th 2023 with function calling data. Data up to Sep 2021.',
     contextWindow: 8192,
     interfaces: [LLM_IF_OAI_Chat, LLM_IF_OAI_Fn],
-    isLatest: true,
+    hidden: true, // because no 'image input' support yet
   },
   {
     idPrefix: 'gpt-4-0314',
@@ -197,12 +170,14 @@ const _knownOpenAIChatModels: ManualMappings = [
     label: '3.5-Turbo 16k',
     description: 'Fair speed and smarts, large context',
     contextWindow: 16384,
+    hidden: true, // because no 'image input' support yet
     interfaces: [LLM_IF_OAI_Chat], // as azure doesn't version model id's (in the deployments), let's assume no function calling
   },
   {
     idPrefix: 'gpt-35-turbo',
     label: '3.5-Turbo',
     contextWindow: 4097,
+    hidden: true, // because no 'image input' support yet
     description: 'Fair speed and smarts',
     interfaces: [LLM_IF_OAI_Chat], // as azure doesn't version model id's (in the deployments), let's assume no function calling
   },

@@ -68,60 +68,7 @@ export function ModelsModal(props: { suspendAutoModelsSetup?: boolean }) {
   return <>
 
     {/* Sources Setup */}
-    {showModelsSetup && <GoodModal
-      title={<>Configure <b>AI Models</b></>}
-      startButton={
-        multiSource ? <Checkbox
-          label='All Services' sx={{ my: 'auto' }}
-          checked={showAllSources} onChange={() => setShowAllSources(all => !all)}
-        /> : undefined
-      }
-      open onClose={closeModelsSetup}
-      sx={{
-        // forces some shrinkage of the contents (ModelsList)
-        overflow: 'auto',
-      }}
-    >
-
-      <ModelsSourceSelector selectedSourceId={selectedSourceId} setSelectedSourceId={setSelectedSourceId} />
-
-      {!!activeSource && <Divider />}
-
-      {!!activeSource && (
-        <Box sx={{ display: 'grid', gap: 'var(--Card-padding)' }}>
-          <VendorSourceSetup source={activeSource} />
-        </Box>
-      )}
-
-      {!!llmCount && <Divider />}
-
-      {!!llmCount && (
-        <ModelsList
-          filterSourceId={showAllSources ? null : selectedSourceId}
-          onOpenLLMOptions={openLlmOptions}
-          sx={{
-            // works in tandem with the parent (GoodModal > Dialog) overflow: 'auto'
-            minHeight: '6rem',
-            overflowY: 'auto',
-
-            // style (list variant=outlined)
-            '--ListItem-paddingY': '0rem',
-            '--ListItem-paddingRight': '0.5rem', // instead of 0.75
-            backgroundColor: 'rgb(var(--joy-palette-neutral-lightChannel) / 20%)',
-            borderRadius: 'md',
-
-            // [mobile] a bit less padding
-            '@media (max-width: 900px)': {
-              '--ListItem-paddingLeft': '0.5rem',
-              '--ListItem-paddingRight': '0.25rem',
-            },
-          }}
-        />
-      )}
-
-      <Divider />
-
-    </GoodModal>}
+   
 
     {/* per-LLM options */}
     {!!showLlmOptions && <LLMOptionsModal id={showLlmOptions} onClose={closeLlmOptions} />}

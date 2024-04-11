@@ -28,16 +28,7 @@ export function SetupFormRefetchButton(props: {
         </FormLabel>
       )}
 
-      <Button
-        color={props.error ? 'warning' : 'primary'}
-        disabled={props.disabled}
-        loading={props.loading}
-        endDecorator={<SyncIcon />}
-        onClick={props.refetch}
-        sx={{ minWidth: 120, ml: 'auto' }}
-      >
-        Models
-      </Button>
+ 
 
     </Box>
   );

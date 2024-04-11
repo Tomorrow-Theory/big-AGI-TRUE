@@ -145,57 +145,7 @@ export function ModelsSourceSelector(props: {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 1 }}>
 
-      {/* Models: [Select] Add Delete */}
-      {!isMobile && <Typography sx={{ mr: 1 }}>
-        Service:
-      </Typography>}
-
-      <Select
-        variant='outlined'
-        value={props.selectedSourceId}
-        disabled={noSources}
-        onChange={(_event, value) => value && props.setSelectedSourceId(value)}
-        startDecorator={selectedSourceItem?.icon}
-        slotProps={{
-          root: { sx: { minWidth: 190 } },
-          indicator: { sx: { opacity: 0.5 } },
-        }}
-      >
-        {sourceItems.map(item => item.component)}
-      </Select>
-
-      {isMobile ? (
-        <IconButton variant={noSources ? 'solid' : 'plain'} color='primary' onClick={handleShowVendors} disabled={!!vendorsMenuAnchor}>
-          <AddIcon />
-        </IconButton>
-      ) : (
-        <Button variant={noSources ? 'solid' : 'plain'} onClick={handleShowVendors} disabled={!!vendorsMenuAnchor} startDecorator={<AddIcon />}>
-          Add
-        </Button>
-      )}
-
-      <IconButton
-        variant='plain' color='neutral' disabled={!enableDeleteButton} sx={{ ml: 'auto' }}
-        onClick={() => props.selectedSourceId && handleDeleteSource(props.selectedSourceId)}
-      >
-        <DeleteOutlineIcon />
-      </IconButton>
-
-
-      {/* vendors popup, for adding */}
-      <CloseableMenu
-        placement='bottom-start' zIndex={themeZIndexOverMobileDrawer}
-        open={!!vendorsMenuAnchor} anchorEl={vendorsMenuAnchor} onClose={closeVendorsMenu}
-        sx={{ minWidth: 220 }}
-      >
-        {vendorItems.map(item => item.component)}
-      </CloseableMenu>
-
-      {/* source delete confirmation */}
-      <ConfirmationModal
-        open={!!confirmDeletionSourceId} onClose={() => setConfirmDeletionSourceId(null)} onPositive={handleDeleteSourceConfirmed}
-        confirmationText={'Are you sure you want to remove these models? The configuration data will be lost and you may have to enter it again.'} positiveActionText={'Remove'}
-      />
+     
 
     </Box>
   );

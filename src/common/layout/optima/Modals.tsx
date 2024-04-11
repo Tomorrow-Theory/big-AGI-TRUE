@@ -16,11 +16,10 @@ export function Modals(props: { suspendAutoModelsSetup?: boolean }) {
 
   return <>
 
-    {/* Overlay Settings */}
+    {/* Overlay Settings 
     <SettingsModal open={!!showPreferencesTab} tabIndex={showPreferencesTab} onClose={closePreferences} onOpenShortcuts={openShortcuts} />
 
-    {/* Overlay Models + LLM Options */}
-    <ModelsModal suspendAutoModelsSetup={props.suspendAutoModelsSetup} />
+    <ModelsModal suspendAutoModelsSetup={props.suspendAutoModelsSetup} />*/}
 
     {/* Overlay Shortcuts */}
     {showShortcuts && <ShortcutsModal onClose={closeShortcuts} />}

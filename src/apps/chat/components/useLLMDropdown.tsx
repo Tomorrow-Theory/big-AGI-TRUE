@@ -117,13 +117,7 @@ function LLMDropdown(props: {
     {/*  </ListItemButton>*/}
     {/*)}*/}
 
-    <ListItemButton key='menu-llms' onClick={openModelsSetup}>
-      <ListItemDecorator><BuildCircleIcon color='success' /></ListItemDecorator>
-      <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'space-between', gap: 1 }}>
-        Models
-        <KeyStroke combo='Ctrl + Shift + M' sx={{ ml: 2 }} />
-      </Box>
-    </ListItemButton>
+ 
 
   </>, [openModelsSetup]);
 
