@@ -117,7 +117,7 @@ export const navItems: {
       // hideOnMobile: true,
       hideDrawer: true,
       isDev: false,
-      _delete: false,
+      _delete: true,
     },
     {
       name: 'Cortex',
@@ -153,6 +153,7 @@ export const navItems: {
       name: SPECIAL_DIVIDER,
       type: 'app',
       route: SPECIAL_DIVIDER,
+      _delete: true,
       icon: () => null,
     },
     {
@@ -162,6 +163,7 @@ export const navItems: {
       type: 'app',
       route: '/personas',
       hideBar: true,
+      _delete: true,
     },
     {
       name: 'Beam',
@@ -171,6 +173,7 @@ export const navItems: {
       hideDrawer: true,
       hideIcon: true,
       isDev: true,
+      _delete: true,
     },
     {
       name: 'Media Library',
@@ -206,18 +209,7 @@ export const navItems: {
 
   // Modals
   modals: [
-    {
-      name: 'Manage Models',
-      icon: BuildCircleIcon,
-      type: 'modal',
-      overlayId: 'models',
-    },
-    {
-      name: 'Preferences',
-      icon: SettingsIcon,
-      type: 'modal',
-      overlayId: 'settings',
-    },
+ 
   ],
 
   // External links
