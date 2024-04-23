@@ -120,8 +120,7 @@ const _knownOpenAIChatModels: ManualMappings = [
     contextWindow: 32768,
     trainingDataCutoff: 'Sep 2021',
     interfaces: [LLM_IF_OAI_Chat],
-    pricing: { chatIn: 60, chatOut: 120 },
-    hidden: true,
+    pricing: { chatIn: 60, chatOut: 120 }
   },
   {
     idPrefix: 'gpt-4-32k-0613',
@@ -173,7 +172,6 @@ const _knownOpenAIChatModels: ManualMappings = [
     label: 'GPT-4',
     description: 'Currently points to gpt-4-0613.',
     symLink: 'gpt-4-0613',
-    hidden: true,
     // copied from symlinked
     contextWindow: 8192,
     trainingDataCutoff: 'Sep 2021',
