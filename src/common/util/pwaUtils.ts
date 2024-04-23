@@ -12,8 +12,8 @@ export const isFirefox = safeUA.includes('Firefox');
 
 // frontend language
 const browserLang = isBrowser ? window.navigator.language : '';
-export const browserLangOrUS = browserLang || 'en-US';
-export const browserLangNotUS = browserLangOrUS !== 'en-US';
+export const browserLangOrUS = browserLang || 'fr-FR';
+export const browserLangNotUS = browserLangOrUS !== 'fr-FR';
 
 // deployment environment
 export const isVercelFromBackendOrSSR = !!process.env.VERCEL_ENV;

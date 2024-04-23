@@ -118,7 +118,7 @@ export function elevenlabsAccess(elevenKey: string | undefined, apiPath: string)
 }
 
 export function elevenlabsVoiceId(voiceId?: string): string {
-  return voiceId?.trim() || env.ELEVENLABS_VOICE_ID || '21m00Tcm4TlvDq8ikWAM';
+  return voiceId?.trim() || env.ELEVENLABS_VOICE_ID || 'qMfbtjrTDTlGtBy52G6E';
 }
 
 

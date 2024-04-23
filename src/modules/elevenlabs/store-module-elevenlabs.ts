@@ -24,7 +24,7 @@ const useElevenlabsStore = create<ModuleElevenlabsStore>()(
       elevenLabsApiKey: '',
       setElevenLabsApiKey: (elevenLabsApiKey: string) => set({ elevenLabsApiKey }),
 
-      elevenLabsVoiceId: '7PSvQd1UwdaaDy1Kezba',
+      elevenLabsVoiceId: '',
       setElevenLabsVoiceId: (elevenLabsVoiceId: string) => set({ elevenLabsVoiceId }),
 
     }),
