@@ -126,7 +126,6 @@ export const navItems: {
       type: 'app',
       route: '/cortex',
       isDev: true,
-      _delete: true,
     },
     {
       name: 'Patterns',
@@ -135,7 +134,6 @@ export const navItems: {
       type: 'app',
       route: '/patterns',
       isDev: true,
-      _delete: true,
     },
     {
       name: 'Workspace',
@@ -146,7 +144,6 @@ export const navItems: {
       hideDrawer: true,
       hideOnMobile: true,
       isDev: true,
-      _delete: true,
     },
     // <-- divider here -->
     {

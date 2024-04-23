@@ -69,7 +69,7 @@ export const useUIPreferencesStore = create<UIPreferencesStore>()(
       doubleClickToEdit: true,
       setDoubleClickToEdit: (doubleClickToEdit: boolean) => set({ doubleClickToEdit }),
 
-      enterIsNewline: false,
+      enterIsNewline: true,
       setEnterIsNewline: (enterIsNewline: boolean) => set({ enterIsNewline }),
 
       renderMarkdown: true,
