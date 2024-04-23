@@ -574,8 +574,8 @@ export function AppChat() {
         const _paneIsFocused = idx === focusedPaneIndex;
         const _paneConversationId = pane.conversationId;
         const _paneChatHandler = chatHandlers[idx] ?? null;
-        const _paneChatBeamStore = beamsStores[idx] ?? null;
-        const _paneChatBeamIsOpen = !!beamsOpens?.[idx];
+        const _paneBeamStore = beamsStores[idx] ?? null;
+        const _paneBeamIsOpen = !!beamsOpens?.[idx] && !!_paneBeamStore;
         const _panesCount = chatPanes.length;
         const _keyAndId = `chat-pane-${pane.paneId}`;
         const _sepId = `sep-pane-${idx}`;
@@ -623,46 +623,44 @@ export function AppChat() {
             <ScrollToBottom
               bootToBottom
               stickToBottomInitial
-              sx={_paneChatBeamIsOpen ? { display: 'none' } : undefined}
+              sx={{ display: 'flex', flexDirection: 'column' }}
             >
 
-              <ChatMessageList
-                conversationId={_paneConversationId}
-                conversationHandler={_paneChatHandler}
-                capabilityHasT2I={capabilityHasT2I}
-                chatLLMContextTokens={chatLLM?.contextTokens ?? null}
-                fitScreen={isMobile || isMultiPane}
-                isMessageSelectionMode={isMessageSelectionMode}
-                setIsMessageSelectionMode={setIsMessageSelectionMode}
-                onConversationBranch={handleConversationBranch}
-                onConversationExecuteHistory={handleConversationExecuteHistory}
-                onTextDiagram={handleTextDiagram}
-                onTextImagine={handleTextImagine}
-                onTextSpeak={handleTextSpeak}
-                sx={{
-                  minHeight: '100%', // ensures filling of the blank space on newer chats
-                }}
-              />
+              {!_paneBeamIsOpen && (
+                <ChatMessageList
+                  conversationId={_paneConversationId}
+                  conversationHandler={_paneChatHandler}
+                  capabilityHasT2I={capabilityHasT2I}
+                  chatLLMContextTokens={chatLLM?.contextTokens ?? null}
+                  fitScreen={isMobile || isMultiPane}
+                  isMessageSelectionMode={isMessageSelectionMode}
+                  setIsMessageSelectionMode={setIsMessageSelectionMode}
+                  onConversationBranch={handleConversationBranch}
+                  onConversationExecuteHistory={handleConversationExecuteHistory}
+                  onTextDiagram={handleTextDiagram}
+                  onTextImagine={handleTextImagine}
+                  onTextSpeak={handleTextSpeak}
+                  sx={{
+                    flexGrow: 1,
+                  }}
+                />
+              )}
 
-              {/*<Ephemerals*/}
-              {/*  conversationId={_paneConversationId}*/}
-              {/*  sx={{*/}
-              {/*    // TODO: Fixme post panels?*/}
-              {/*    // flexGrow: 0.1,*/}
-              {/*    flexShrink: 0.5,*/}
-              {/*    overflowY: 'auto',*/}
-              {/*    minHeight: 64,*/}
-              {/*  }}*/}
-              {/*/>*/}
+              {_paneBeamIsOpen && (
+                <ChatBeamWrapper
+                  beamStore={_paneBeamStore}
+                  isMobile={isMobile}
+                  inlineSx={{
+                    flexGrow: 1,
+                    // minHeight: 'calc(100vh - 69px - var(--AGI-Nav-width))',
+                  }}
+                />
+              )}
 
               {/* Visibility and actions are handled via Context */}
               <ScrollToBottomButton />
 
             </ScrollToBottom>
-
-            {(_paneChatBeamIsOpen && !!_paneChatBeamStore) && (
-              <ChatBeamWrapper beamStore={_paneChatBeamStore} isMobile={isMobile} />
-            )}
 
           </Panel>
 
