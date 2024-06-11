@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 
-import { BrowserContext, connect, ScreenshotOptions, TimeoutError } from '@cloudflare/puppeteer';
+import { BrowserContext, connect, ScreenshotOptions } from '@cloudflare/puppeteer';
 import { default as TurndownService } from 'turndown';
 import { load as cheerioLoad } from 'cheerio';
 
@@ -134,7 +134,8 @@ async function workerPuppeteer(
       result.stopReason = 'end';
     }
   } catch (error: any) {
-    const isTimeout = error instanceof TimeoutError;
+    // This was "error instanceof TimeoutError;" but threw some type error - trying the below instead
+    const isTimeout = error?.message?.includes('Navigation timeout') || false;
     result.stopReason = isTimeout ? 'timeout' : 'error';
     if (!isTimeout) {
       result.error = '[Puppeteer] ' + (error?.message || error?.toString() || 'Unknown goto error');
@@ -164,7 +165,7 @@ async function workerPuppeteer(
         result.error = '[Puppeteer] Empty content';
     }
   } catch (error: any) {
-    result.error = '[Puppeteer] ' + (error?.message || error?.toString() || 'Unknown evaluate error');
+    result.error = '[Puppeteer] ' + (error?.message || error?.toString() || 'Unknown content error');
   }
 
   // get a screenshot of the page
