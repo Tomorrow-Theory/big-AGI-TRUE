@@ -8,10 +8,22 @@ export const hardcodedAnthropicModels: ModelDescriptionSchema[] = [
 
   // Claude-3 models - https://docs.anthropic.com/claude/docs/models-overview#model-comparison
   {
+    id: 'claude-3-5-sonnet-20240620',
+    label: 'Claude 3.5 Sonnet',
+    created: roundTime('2024-02-29'),
+    description: 'Most powerful and fast model for highly complex tasks',
+    contextWindow: 200000,
+    maxCompletionTokens: 4096,
+    trainingDataCutoff: 'Aug 2023',
+    interfaces: [LLM_IF_OAI_Chat, LLM_IF_OAI_Vision],
+    pricing: { chatIn: 3, chatOut: 15 },
+    benchmark: { cbaElo: 1203, cbaMmlu: 79 },
+  },
+  {
     id: 'claude-3-opus-20240229',
     label: 'Claude 3 Opus',
     created: roundTime('2024-02-29'),
-    description: 'Most powerful model for highly complex tasks',
+    description: 'Second most powerful model for highly complex tasks',
     contextWindow: 200000,
     maxCompletionTokens: 4096,
     trainingDataCutoff: 'Aug 2023',
