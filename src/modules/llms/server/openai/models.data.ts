@@ -17,7 +17,7 @@ const _knownOpenAIChatModels: ManualMappings = [
     label: 'GPT-4o',
     description: 'Currently points to gpt-4o-2024-05-13.',
     symLink: 'gpt-4o-2024-05-13',
-    hidden: true,
+    hidden: false,
     // copied from symlinked
     contextWindow: 128000,
     maxCompletionTokens: 4096,
