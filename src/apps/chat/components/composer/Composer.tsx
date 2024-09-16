@@ -885,7 +885,7 @@ export function Composer(props: {
       {cameraCaptureComponent}
 
       {/* Actile */}
-      {actileComponent}
+      {actileComponent} 
 
     </Box>
   );
