@@ -13,8 +13,8 @@ export const useTextToImageStore = create<TextToImageStore>()(
   persist(
     (_set) => ({
 
-      selectedT2IProviderId: null, // null: auto-select highest priority configured provider
-      setSelectedT2IProviderId: (selectedT2IProviderId: string | null) => _set({ selectedT2IProviderId }),
+      activeProviderId: 'openai', // null: will auto-select the first availabe provider
+      setActiveProviderId: (activeProviderId: string | null) => _set({ activeProviderId }),
 
     }),
     {

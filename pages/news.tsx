@@ -11,5 +11,6 @@ export default withNextJSPerPageLayout({ type: 'optima', suspendAutoModelsSetup:
   // 'touch' the last seen news version
   React.useEffect(() => markNewsAsSeen(), []);
 
-  return <AppNews />;
+  //return <AppNews />;
+  return true;
 });
