@@ -30,7 +30,8 @@ export function shallRedirectToNews() {
   const { lastSeenNewsVersion } = useAppNewsStateStore.getState();
   const { usageCount } = useAppStateStore.getState();
   const isNewsOutdated = (lastSeenNewsVersion || 0) < incrementalNewsVersion;
-  return isNewsOutdated && usageCount > 2;
+  //return isNewsOutdated && usageCount > 2;
+  return false;
 }
 
 export function markNewsAsSeen() {

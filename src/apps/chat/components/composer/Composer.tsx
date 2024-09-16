@@ -793,13 +793,13 @@ export function Composer(props: {
               {/* [desktop] This column arrangement will have the [desktop] beam button right under call */}
               <Box sx={isMobile ? { display: 'flex' } : { display: 'grid', gap: 1 }}>
 
-                {/* [mobile] bottom-corner secondary button */}
+                {/* [mobile] bottom-corner secondary button }
                 {isMobile && (showChatExtras
                     ? <ButtonCallMemo isMobile disabled={noConversation || noLLM} onClick={handleCallClicked} />
                     : isDraw
                       ? <ButtonOptionsDraw isMobile onClick={handleDrawOptionsClicked} sx={{ mr: { xs: 1, md: 2 } }} />
                       : <IconButton disabled sx={{ mr: { xs: 1, md: 2 } }} />
-                )}
+                )*/}
 
                 {/* Responsive Send/Stop buttons */}
                 <ButtonGroup
@@ -874,8 +874,8 @@ export function Composer(props: {
               {/* [desktop] secondary bottom-buttons (aligned to bottom for now, and mutually exclusive) */}
               {isDesktop && <Box sx={{ mt: 'auto', display: 'grid', gap: 1 }}>
 
-                {/* [desktop] Call secondary button */}
-                {showChatExtras && <ButtonCallMemo disabled={noConversation || noLLM} onClick={handleCallClicked} />}
+                {/* [desktop] Call secondary button }
+                {showChatExtras && <ButtonCallMemo disabled={noConversation || noLLM} onClick={handleCallClicked} />*/}
 
                 {/* [desktop] Draw Options secondary button */}
                 {isDraw && <ButtonOptionsDraw onClick={handleDrawOptionsClicked} />}

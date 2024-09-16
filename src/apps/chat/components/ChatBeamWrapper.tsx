@@ -34,7 +34,6 @@ export function ChatBeamWrapper(props: {
     <BeamView
       beamStore={props.beamStore}
       isMobile={props.isMobile}
-      showExplainer
     />
   ), [props.beamStore, props.isMobile]);
 
