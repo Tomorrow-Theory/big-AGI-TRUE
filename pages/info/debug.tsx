@@ -12,7 +12,7 @@ import { getPlantUmlServerUrl } from '~/modules/blocks/code/code-renderers/Rende
 import { withNextJSPerPageLayout } from '~/common/layout/withLayout';
 
 
-// app config
+// basics
 import { Brand } from '~/common/app.config';
 import { ROUTE_APP_CHAT, ROUTE_INDEX } from '~/common/app.routes';
 
@@ -30,7 +30,7 @@ import { useFolderStore } from '~/common/state/store-folders';
 import { useUXLabsStore } from '~/common/state/store-ux-labs';
 
 // utils access
-import { clientHostName, isChromeDesktop, isFirefox, isIPhoneUser, isMacUser, isPwa, isVercelFromFrontend } from '~/common/util/pwaUtils';
+import { BrowserLang, Is, clientHostName, isPwa } from '~/common/util/pwaUtils';
 import { getGA4MeasurementId } from '~/common/components/GoogleAnalytics';
 import { prettyTimestampForFilenames } from '~/common/util/timeUtils';
 import { supportsClipboardRead } from '~/common/util/clipboardUtils';
@@ -84,14 +84,11 @@ function AppDebug() {
   const { lastSeenNewsVersion } = useAppNewsStateStore.getState();
   const { usageCount } = useAppStateStore.getState();
 
-
   // derived state
   const cClient = {
     // isBrowser,
-    isChromeDesktop,
-    isFirefox,
-    isIPhone: isIPhoneUser,
-    isMac: isMacUser,
+    Is,
+    BrowserLang,
     isPWA: isPwa(),
     supportsClipboardPaste: supportsClipboardRead,
     supportsScreenCapture,
@@ -118,7 +115,6 @@ function AppDebug() {
     deployment: {
       home: Brand.URIs.Home,
       hostName: clientHostName(),
-      isVercelFromFrontend,
       measurementId: getGA4MeasurementId(),
       plantUmlServerUrl: getPlantUmlServerUrl(),
       routeIndex: ROUTE_INDEX,

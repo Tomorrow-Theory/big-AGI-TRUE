@@ -2,6 +2,7 @@ import { getImageAsset } from '~/modules/dblobs/dblobs.images';
 
 import { DMessage, DMetaReferenceItem, MESSAGE_FLAG_AIX_SKIP, MESSAGE_FLAG_VND_ANT_CACHE_AUTO, MESSAGE_FLAG_VND_ANT_CACHE_USER, messageHasUserFlag } from '~/common/stores/chat/chat.message';
 import { DMessageImageRefPart, isContentFragment, isContentOrAttachmentFragment, isTextPart } from '~/common/stores/chat/chat.fragments';
+import { Is } from '~/common/util/pwaUtils';
 import { LLMImageResizeMode, resizeBase64ImageIfNeeded } from '~/common/util/imageUtils';
 
 // NOTE: pay particular attention to the "import type", as this is importing from the server-side Zod definitions
@@ -11,27 +12,11 @@ import type { AixAPIChatGenerate_Request, AixMessages_ChatMessage, AixMessages_M
 
 
 // configuration
-export const MODEL_IMAGE_RESCALE_MIMETYPE = 'image/webp';
+export const MODEL_IMAGE_RESCALE_MIMETYPE = !Is.Browser.Safari ? 'image/webp' : 'image/jpeg';
 export const MODEL_IMAGE_RESCALE_QUALITY = 0.90;
 
 
 // AIX <> Simple Text API helpers
-
-function aixCGRTextPart(text: string) {
-  return { pt: 'text' as const, text };
-}
-
-export function aixCGR_SystemMessage(text: string) {
-  return { parts: [aixCGRTextPart(text)] };
-}
-
-function aixCGR_UserMessageText(text: string): AixMessages_UserMessage {
-  return { role: 'user', parts: [aixCGRTextPart(text)] };
-}
-
-function aixCGR_ModelMessageText(text: string): AixMessages_ModelMessage {
-  return { role: 'model', parts: [aixCGRTextPart(text)] };
-}
 
 export function aixChatGenerateRequestSimple(systemMessage: string, messages: { role: AixMessages_ChatMessage['role'], text: string }[]): AixAPIChatGenerate_Request {
   return {
@@ -46,6 +31,22 @@ export function aixChatGenerateRequestSimple(systemMessage: string, messages: { 
       }
     }),
   };
+}
+
+export function aixCGR_SystemMessage(text: string) {
+  return { parts: [aixCGRTextPart(text)] };
+}
+
+function aixCGR_UserMessageText(text: string): AixMessages_UserMessage {
+  return { role: 'user', parts: [aixCGRTextPart(text)] };
+}
+
+function aixCGR_ModelMessageText(text: string): AixMessages_ModelMessage {
+  return { role: 'model', parts: [aixCGRTextPart(text)] };
+}
+
+function aixCGRTextPart(text: string) {
+  return { pt: 'text' as const, text };
 }
 
 
@@ -246,10 +247,13 @@ function _clientCreateAixMetaInReferenceToPart(items: DMetaReferenceItem[]): Aix
  * Hot fix for handling system messages with OpenAI O1 Preview models.
  * Converts System to User messages for compatibility.
  */
-export function clientHotFixSystemMessageForO1Preview(aixChatGenerate: AixAPIChatGenerate_Request): void {
+export function clientHotFixGenerateRequestForO1Preview(aixChatGenerate: AixAPIChatGenerate_Request): void {
+
+  let workaroundsCount = 0;
 
   // Convert the main system message if it exists
   if (aixChatGenerate.systemMessage) {
+    workaroundsCount++;
 
     // Convert system message to user message
     const systemAsUser: AixMessages_UserMessage = {
@@ -266,5 +270,22 @@ export function clientHotFixSystemMessageForO1Preview(aixChatGenerate: AixAPICha
 
   // Note: other conversions that would translate to system inside the AIX Dispatch will be handled there, as we have a
   // higher level representation here, where the roles are 'user', 'model', and 'tool'.
+
+  // Remove any inline images from the entire chat sequence
+  for (let i = 0; i < aixChatGenerate.chatSequence.length; i++) {
+    const message = aixChatGenerate.chatSequence[i];
+
+    // Iterate over message parts and remove inline images
+    for (let j = message.parts.length - 1; j >= 0; j--) {
+      if (message.parts[j].pt === 'inline_image') {
+        workaroundsCount++;
+        message.parts.splice(j, 1);
+      }
+    }
+  }
+
+  // Log the number of workarounds applied
+  if (workaroundsCount > 0)
+    console.warn(`[DEV] Working around o1 models limitations: applied ${workaroundsCount} client-side workarounds`);
 
 }

@@ -27,4 +27,7 @@ export const Brand = {
     // Twitter: 'https://www.twitter.com/enricoros',
     PrivacyPolicy: 'https://tomorrowtheory.com/en/terms-of-service-contact/',
   },
+  Docs: {
+    Public: (docPage: string) => `https://big-agi.com/docs/${docPage}`,
+  }
 } as const;

@@ -1,10 +1,10 @@
 import type { StateCreator } from 'zustand/vanilla';
 
-import { aixChatGenerateContentStreaming, AixChatGenerateDMessageUpdate } from '~/modules/aix/client/aix.client';
+import { AixChatGenerateContent_DMessage, aixChatGenerateContent_DMessage_FromHistory } from '~/modules/aix/client/aix.client';
 
 import type { DLLMId } from '~/common/stores/llms/llms.types';
 import { agiUuid } from '~/common/util/idUtils';
-import { createDMessageEmpty, DMessage, duplicateDMessage } from '~/common/stores/chat/chat.message';
+import { createDMessageEmpty, DMessage, duplicateDMessageNoPH, messageWasInterruptedAtStart } from '~/common/stores/chat/chat.message';
 import { createPlaceholderMetaFragment } from '~/common/stores/chat/chat.fragments';
 import { findLLMOrThrow } from '~/common/stores/llms/store-llms';
 import { getUXLabsHighPerformance } from '~/common/state/store-ux-labs';
@@ -55,7 +55,7 @@ function rayScatterStart(ray: BRay, llmId: DLLMId | null, inputHistory: DMessage
 
   const abortController = new AbortController();
 
-  const onMessageUpdated = (incrementalMessage: AixChatGenerateDMessageUpdate, completed: boolean) => {
+  const onMessageUpdated = (incrementalMessage: AixChatGenerateContent_DMessage, completed: boolean) => {
     const { fragments: incrementalFragments, ...incrementalRest } = incrementalMessage;
     _rayUpdate(ray.rayId, (ray) => ({
       message: {
@@ -69,16 +69,17 @@ function rayScatterStart(ray: BRay, llmId: DLLMId | null, inputHistory: DMessage
   };
 
   // stream the ray's messages directly to the state store
-  aixChatGenerateContentStreaming(
+  aixChatGenerateContent_DMessage_FromHistory(
     llmId,
     inputHistory,
     'beam-scatter', ray.rayId,
-    getUXLabsHighPerformance() ? 0 : rays.length,
-    abortController.signal,
+    { abortSignal: abortController.signal, throttleParallelThreads: getUXLabsHighPerformance() ? 0 : rays.length },
     onMessageUpdated,
   )
     .then((status) => {
+      const clearFragments = messageWasInterruptedAtStart(status.lastDMessage);
       _rayUpdate(ray.rayId, {
+        ...(clearFragments && { message: createDMessageEmpty('assistant') }),
         status: (status.outcome === 'success') ? 'success'
           : (status.outcome === 'aborted') ? 'stopped'
             : (status.outcome === 'errored') ? 'error' : 'empty',
@@ -260,7 +261,7 @@ export const createScatterSlice: StateCreator<RootStoreSlice & ScatterStoreSlice
       // pre-fill the ray with the imported message
       if (message.fragments.length) {
         emptyRay.status = 'success';
-        emptyRay.message = duplicateDMessage(message);
+        emptyRay.message = duplicateDMessageNoPH(message); // [beam] import dmessage copy from chat
         emptyRay.message.updated = Date.now();
         emptyRay.imported = true;
       }

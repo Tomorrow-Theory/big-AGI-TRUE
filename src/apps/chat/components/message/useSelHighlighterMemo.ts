@@ -2,6 +2,7 @@ import * as React from 'react';
 
 import type { DMessageId } from '~/common/stores/chat/chat.message';
 import { createTextContentFragment, DMessageContentFragment, DMessageFragment, DMessageFragmentId, isTextPart } from '~/common/stores/chat/chat.fragments';
+import { wrapWithMarkdownSyntax } from '~/modules/blocks/markdown/markdown.wrapper';
 
 import { BUBBLE_MIN_TEXT_LENGTH } from './ChatMessage';
 
@@ -19,10 +20,11 @@ import { BUBBLE_MIN_TEXT_LENGTH } from './ChatMessage';
  *   This is an important highlight.
  * </mark>
  */
-const APPLY_HIGHLIGHT = (text: string) => `<mark>${text}</mark>`;
-const APPLY_STRONG = (text: string) => `**${text}**`;
+const APPLY_HTML_HIGHLIGHT = (text: string) => `<mark>${text}</mark>`;
+const APPLY_HTML_STRIKE = (text: string) => `<del>${text}</del>`;
+const APPLY_MD_STRONG = (text: string) => wrapWithMarkdownSyntax(text, '**');
 
-type HighlightTool = 'highlight' | 'strong';
+type HighlightTool = 'highlight' | 'strike' | 'strong';
 
 export function useSelHighlighterMemo(
   messageId: DMessageId,
@@ -50,12 +52,19 @@ export function useSelHighlighterMemo(
 
           index = fragmentText.indexOf(selText, index + 1);
 
-          // make the highlighter function
+          // Tool application function
           acc = (tool: HighlightTool) => {
-            const highlighted = tool === 'highlight' ? APPLY_HIGHLIGHT(selText) : APPLY_STRONG(selText);
+            // Apply the tool
+            const highlighted =
+              tool === 'highlight' ? APPLY_HTML_HIGHLIGHT(selText)
+                : tool === 'strike' ? APPLY_HTML_STRIKE(selText)
+                  : tool === 'strong' ? APPLY_MD_STRONG(selText)
+                    : selText;
+            // Toggle, if the tooled text is already present
             const newFragmentText =
               fragmentText.includes(highlighted) ? fragmentText.replace(highlighted, selText) // toggles selection
                 : fragmentText.replace(selText, highlighted);
+            // Replace the whole fragment within the message
             onMessageFragmentReplace(messageId, fragment.fId, createTextContentFragment(newFragmentText));
           };
         }

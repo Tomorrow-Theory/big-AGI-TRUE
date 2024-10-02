@@ -3,13 +3,13 @@ import * as React from 'react';
 import { Avatar, Box, IconButton, ListItem, ListItemButton, ListItemDecorator, Sheet, styled, Tooltip, Typography } from '@mui/joy';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import CopyAllIcon from '@mui/icons-material/CopyAll';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
 import FolderIcon from '@mui/icons-material/Folder';
 import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
-import ForkRightIcon from '@mui/icons-material/ForkRight';
 import TelegramIcon from '@mui/icons-material/Telegram';
 
 import { SystemPurposeId, SystemPurposes } from '../../../../data';
@@ -18,11 +18,11 @@ import { autoConversationTitle } from '~/modules/aifn/autotitle/autoTitle';
 
 import type { DConversationId } from '~/common/stores/chat/chat.conversation';
 import type { DFolder } from '~/common/state/store-folders';
+import { ANIM_BUSY_TYPING } from '~/common/util/dMessageUtils';
 import { InlineTextarea } from '~/common/components/InlineTextarea';
-import { isDeepEqual } from '~/common/util/jsUtils';
+import { isDeepEqual } from '~/common/util/hooks/useDeep';
 import { useChatStore } from '~/common/stores/chat/store-chats';
 
-import { ANIM_BUSY_TYPING } from '../message/messageUtils';
 import { CHAT_NOVEL_TITLE } from '../../AppChat';
 
 
@@ -80,7 +80,7 @@ function ChatDrawerItem(props: {
   showSymbols: boolean | 'gif',
   bottomBarBasis: number,
   onConversationActivate: (conversationId: DConversationId, closeMenu: boolean) => void,
-  onConversationBranch: (conversationId: DConversationId, messageId: string | null) => void,
+  onConversationBranch: (conversationId: DConversationId, messageId: string | null, addSplitPane: boolean) => void,
   onConversationDeleteNoConfirmation: (conversationId: DConversationId) => void,
   onConversationExport: (conversationId: DConversationId, exportAll: boolean) => void,
   onConversationFolderChange: (folderChangeRequest: FolderChangeRequest) => void,
@@ -128,7 +128,7 @@ function ChatDrawerItem(props: {
 
   const handleConversationBranch = React.useCallback((event: React.MouseEvent) => {
     event.stopPropagation();
-    conversationId && onConversationBranch(conversationId, null);
+    conversationId && onConversationBranch(conversationId, null, false /* no pane from Drawer duplicate */);
   }, [conversationId, onConversationBranch]);
 
 
@@ -337,7 +337,7 @@ function ChatDrawerItem(props: {
             {/* Current Folder color, and change initiator */}
             {!deleteArmed && <>
               {(folder !== undefined) && <>
-                <Tooltip disableInteractive title={folder ? `Change Folder (${folder.title})` : 'Add to Folder'}>
+                <Tooltip arrow disableInteractive title={folder ? `Change Folder (${folder.title})` : 'Add to Folder'}>
                   {folder ? (
                     <IconButton size='sm' onClick={handleFolderChangeBegin}>
                       <FolderIcon style={{ color: folder.color || 'inherit' }} />
@@ -352,26 +352,26 @@ function ChatDrawerItem(props: {
                 {/*<Divider orientation='vertical' sx={{ my: 1, opacity: 0.5 }} />*/}
               </>}
 
-              <Tooltip disableInteractive title='Rename'>
+              <Tooltip arrow disableInteractive title='Rename'>
                 <FadeInButton size='sm' disabled={isEditingTitle || isAutoEditingTitle} onClick={handleTitleEditBegin}>
                   <EditRoundedIcon />
                 </FadeInButton>
               </Tooltip>
 
               {!isNew && <>
-                <Tooltip disableInteractive title='Auto-Title'>
+                <Tooltip arrow disableInteractive color='success' title='Auto-Title'>
                   <FadeInButton size='sm' disabled={isEditingTitle || isAutoEditingTitle} onClick={handleTitleEditAuto}>
                     <AutoFixHighIcon />
                   </FadeInButton>
                 </Tooltip>
 
-                <Tooltip disableInteractive title='Duplicate (Branch)'>
+                <Tooltip arrow disableInteractive title='Duplicate'>
                   <FadeInButton size='sm' onClick={handleConversationBranch}>
-                    <ForkRightIcon />
+                    <CopyAllIcon />
                   </FadeInButton>
                 </Tooltip>
 
-                <Tooltip disableInteractive title='Export Chat'>
+                <Tooltip arrow disableInteractive title='Export Chat'>
                   <FadeInButton size='sm' onClick={handleConversationExport}>
                     <FileUploadOutlinedIcon />
                   </FadeInButton>
@@ -386,14 +386,14 @@ function ChatDrawerItem(props: {
             {/* Delete [armed, arming] buttons */}
             {/*{!searchFrequency && <>*/}
             {deleteArmed && (
-              <Tooltip disableInteractive title='Confirm Deletion'>
+              <Tooltip color='danger' arrow disableInteractive title='Confirm Deletion'>
                 <FadeInButton key='btn-del' variant='solid' color='success' size='sm' onClick={handleConversationDelete} sx={{ opacity: 1, mr: 0.5 }}>
                   <DeleteForeverIcon sx={{ color: 'danger.solidBg' }} />
                 </FadeInButton>
               </Tooltip>
             )}
 
-            <Tooltip disableInteractive title={deleteArmed ? 'Cancel Delete' : 'Delete'}>
+            <Tooltip arrow disableInteractive title={deleteArmed ? 'Cancel Delete' : 'Delete'}>
               <FadeInButton key='btn-arm' size='sm' onClick={deleteArmed ? handleDeleteButtonHide : handleDeleteButtonShow} sx={deleteArmed ? { opacity: 1 } : {}}>
                 {deleteArmed ? <CloseRoundedIcon /> : <DeleteOutlineIcon />}
               </FadeInButton>

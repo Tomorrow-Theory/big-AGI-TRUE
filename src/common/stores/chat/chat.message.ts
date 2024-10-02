@@ -1,6 +1,6 @@
 import { agiUuid } from '~/common/util/idUtils';
 
-import { createPlaceholderMetaFragment, createTextContentFragment, DMessageContentFragment, DMessageFragment, duplicateDMessageFragments, isAttachmentFragment, isContentFragment, isContentOrAttachmentFragment, isTextPart, specialShallowReplaceTextContentFragment } from './chat.fragments';
+import { createPlaceholderMetaFragment, createTextContentFragment, DMessageContentFragment, DMessageFragment, duplicateDMessageFragmentsNoPH, isAttachmentFragment, isContentFragment, isContentOrAttachmentFragment, isTextPart, specialShallowReplaceTextContentFragment } from './chat.fragments';
 
 import type { ModelVendorId } from '~/modules/llms/vendors/vendors.registry';
 
@@ -63,12 +63,14 @@ export interface DMetaReferenceItem {
 export type DMessageUserFlag =
   | 'aix.skip'                        // mark this message as skipped during generation (won't be sent to the LLM)
   | 'starred'                         // user has starred this message
+  | 'notify.complete'                 // user has requested a notification when this message is complete
   | 'vnd.ant.cache.auto'              // [Anthropic] user requested breakpoints to be added automatically (per conversation)
   | 'vnd.ant.cache.user'              // [Anthropic] user requestd for a breakpoint to be added here specifically
   ;
 
 export const MESSAGE_FLAG_AIX_SKIP: DMessageUserFlag = 'aix.skip';
 export const MESSAGE_FLAG_STARRED: DMessageUserFlag = 'starred';
+export const MESSAGE_FLAG_NOTIFY_COMPLETE: DMessageUserFlag = 'notify.complete';
 export const MESSAGE_FLAG_VND_ANT_CACHE_AUTO: DMessageUserFlag = 'vnd.ant.cache.auto';
 export const MESSAGE_FLAG_VND_ANT_CACHE_USER: DMessageUserFlag = 'vnd.ant.cache.user';
 
@@ -76,9 +78,13 @@ export const MESSAGE_FLAG_VND_ANT_CACHE_USER: DMessageUserFlag = 'vnd.ant.cache.
 // Message > Generator
 
 export type DMessageGenerator = ({
+  // A named generator is a simple string, presented as-is
   mgt: 'named';
   name: 'web' | 'issue' | 'help' | string;
 } | {
+  // An AIX generator preserves information about original model and vendor:
+  // - vendor ids will be stable across time
+  // - no guarantee of consistency on the model, e.g. could be across different devices
   mgt: 'aix',
   name: string;                       // model that handled the request
   aix: {
@@ -139,12 +145,12 @@ export function createDMessageFromFragments(role: DMessageRole, fragments: DMess
 
 // helpers - duplication
 
-export function duplicateDMessage(message: Readonly<DMessage>): DMessage {
+export function duplicateDMessageNoPH(message: Readonly<DMessage>): DMessage {
   return {
     id: agiUuid('chat-dmessage'),
 
     role: message.role,
-    fragments: duplicateDMessageFragments(message.fragments),
+    fragments: duplicateDMessageFragmentsNoPH(message.fragments), // [*] full message duplication (see downstream)
 
     ...(message.pendingIncomplete ? { pendingIncomplete: true } : {}),
 
@@ -187,11 +193,19 @@ export function duplicateDMessageGenerator(generator: Readonly<DMessageGenerator
 }
 
 
+// helpers - status checks
+
+export function messageWasInterruptedAtStart(message: Pick<DMessage, 'generator' | 'fragments'>): boolean {
+  return message.generator?.tokenStopReason === 'client-abort' && message.fragments.length === 0;
+}
+
+
 // helpers - user flags
 
 const flag2EmojiMap: Record<DMessageUserFlag, string> = {
   [MESSAGE_FLAG_AIX_SKIP]: '',
   [MESSAGE_FLAG_STARRED]: '⭐️',
+  [MESSAGE_FLAG_NOTIFY_COMPLETE]: '', //'🔔',
   [MESSAGE_FLAG_VND_ANT_CACHE_AUTO]: '',
   [MESSAGE_FLAG_VND_ANT_CACHE_USER]: '',
 };
@@ -205,10 +219,15 @@ export function messageHasUserFlag(message: Pick<DMessage, 'userFlags'>, flag: D
 }
 
 export function messageSetUserFlag(message: Pick<DMessage, 'userFlags'>, flag: DMessageUserFlag, on: boolean): DMessageUserFlag[] {
-  if (on)
+  if (on) {
+    if (message.userFlags?.includes(flag))
+      return message.userFlags;
     return [...(message.userFlags || []), flag];
-  else
+  } else {
+    if (!message.userFlags?.includes(flag))
+      return message.userFlags || [];
     return (message.userFlags || []).filter(_f => _f !== flag);
+  }
 }
 
 

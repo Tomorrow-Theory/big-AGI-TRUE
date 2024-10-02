@@ -157,6 +157,12 @@ export class ConversationHandler {
     this.chatActions.replaceMessageFragment(this.conversationId, messageId, fragmentId, newFragment, messageComplete, true);
   }
 
+  messageHasUserFlag(messageId: DMessageId, userFlag: DMessageUserFlag): boolean {
+    const message = this.chatActions.historyView(this.conversationId)?.find(m => m.id === messageId);
+    if (!message) return false;
+    return messageHasUserFlag(message, userFlag);
+  }
+
   messageSetUserFlag(messageId: DMessageId, userFlag: DMessageUserFlag, on: boolean, touch: boolean): void {
     this.messageEdit(messageId, (message) => ({
       userFlags: messageSetUserFlag(message, userFlag, on),
@@ -228,7 +234,7 @@ export class ConversationHandler {
       terminateKeepingSettings();
     };
 
-    beamOpen(viewHistory, getChatLLMId(), onBeamSuccess);
+    beamOpen(viewHistory, getChatLLMId(), !!destReplaceMessageId, onBeamSuccess);
     importMessages.length && beamImportRays(importMessages, getChatLLMId());
   }
 

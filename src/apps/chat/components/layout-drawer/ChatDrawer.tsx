@@ -65,7 +65,7 @@ function ChatDrawer(props: {
   chatPanesConversationIds: DConversationId[],
   disableNewButton: boolean,
   onConversationActivate: (conversationId: DConversationId) => void,
-  onConversationBranch: (conversationId: DConversationId, messageId: string | null) => void,
+  onConversationBranch: (conversationId: DConversationId, messageId: string | null, addSplitPane: boolean) => void,
   onConversationNew: (forceNoRecycle: boolean) => void,
   onConversationsDelete: (conversationIds: DConversationId[], bypassConfirmation: boolean) => void,
   onConversationsExportDialog: (conversationId: DConversationId | null, exportAll: boolean) => void,
@@ -332,7 +332,8 @@ function ChatDrawer(props: {
           ) : item.type === 'nav-item-group' ? (
             <Typography key={'nav-divider-' + idx} level='body-xs' sx={{
               textAlign: 'center',
-              my: 'calc(var(--ListItem-minHeight) / 4)',
+              my: 1,
+              // my: 'calc(var(--ListItem-minHeight) / 4)',
               // keeps the group header sticky to the top
               position: 'sticky',
               top: 0,

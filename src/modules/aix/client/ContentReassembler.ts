@@ -3,7 +3,7 @@ import { create_CodeExecutionInvocation_ContentFragment, create_CodeExecutionRes
 
 import type { AixWire_Particles } from '../server/api/aix.wiretypes';
 
-import { Aix_LL_GenerateContentAccumulator, DEBUG_PARTICLES } from './aix.client';
+import { AixChatGenerateContent_LL, DEBUG_PARTICLES } from './aix.client';
 
 
 // configuration
@@ -21,7 +21,7 @@ export class ContentReassembler {
 
   private currentTextFragmentIndex: number | null = null;
 
-  constructor(readonly accumulator: Aix_LL_GenerateContentAccumulator) {
+  constructor(readonly accumulator: AixChatGenerateContent_LL) {
     // [DEV} nullify the global
     devMode_AixLastDispatchRequest = null;
   }
@@ -31,7 +31,7 @@ export class ContentReassembler {
   //   this.currentTextFragmentIndex = null;
   // }
 
-  reassembleParticle(op: AixWire_Particles.ChatGenerateOp): void {
+  reassembleParticle(op: AixWire_Particles.ChatGenerateOp, debugIsAborted: boolean): void {
     if (DEBUG_PARTICLES)
       console.log('-> aix.p:', op);
     let isDebug = false;
@@ -92,20 +92,20 @@ export class ContentReassembler {
 
     // [DEV] Debugging
     if (!isDebug && devMode_AixLastDispatchRequest?.particles)
-      devMode_AixLastDispatchRequest.particles.push(JSON.stringify(op));
+      devMode_AixLastDispatchRequest.particles.push((debugIsAborted ? '!(A)! ' : '') + JSON.stringify(op));
   }
 
-  reassembleExceptError(errorAsText: string): void {
+  reassembleClientAbort(): void {
+    if (DEBUG_PARTICLES)
+      console.log('-> aix.p: abort-client');
+    this.reassembleParticle({ cg: 'end', reason: 'abort-client', tokenStopReason: 'client-abort-signal' }, true);
+  }
+
+  reassembleClientException(errorAsText: string): void {
     if (DEBUG_PARTICLES)
       console.log('-> aix.p: issue:', errorAsText);
     this.onCGIssue({ cg: 'issue', issueId: 'client-read', issueText: errorAsText });
-    this.reassembleParticle({ cg: 'end', reason: 'issue-rpc', tokenStopReason: 'cg-issue' });
-  }
-
-  reassembleExceptUserAbort(): void {
-    if (DEBUG_PARTICLES)
-      console.log('-> aix.p: abort-client');
-    this.reassembleParticle({ cg: 'end', reason: 'abort-client', tokenStopReason: 'client-abort-signal' });
+    this.reassembleParticle({ cg: 'end', reason: 'issue-rpc', tokenStopReason: 'cg-issue' }, false);
   }
 
   reassembleFinalize(): void {

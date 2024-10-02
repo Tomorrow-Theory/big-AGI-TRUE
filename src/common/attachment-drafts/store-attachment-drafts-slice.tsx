@@ -5,7 +5,7 @@ import type { DBlobDBContextId, DBlobDBScopeId } from '~/modules/dblobs/dblobs.t
 
 import type { DMessageAttachmentFragment } from '~/common/stores/chat/chat.fragments';
 
-import type { AttachmentDraft, AttachmentDraftConverter, AttachmentDraftId, AttachmentDraftSource } from './attachment.types';
+import type { AttachmentCreationOptions, AttachmentDraft, AttachmentDraftConverter, AttachmentDraftId, AttachmentDraftSource } from './attachment.types';
 import { attachmentCreate, attachmentDefineConverters, attachmentLoadInputAsync, attachmentPerformConversion } from './attachment.pipeline';
 import { removeAttachmentOwnedDBAsset, transferAttachmentOwnedDBAsset } from './attachment.dblobs';
 
@@ -20,7 +20,7 @@ interface AttachmentDraftsState {
 
 export interface AttachmentsDraftsStore extends AttachmentDraftsState {
 
-  createAttachmentDraft: (source: AttachmentDraftSource) => Promise<void>;
+  createAttachmentDraft: (source: AttachmentDraftSource, options: AttachmentCreationOptions) => Promise<void>;
   removeAllAttachmentDrafts: () => void;
   removeAttachmentDraft: (attachmentDraftId: AttachmentDraftId) => void;
   moveAttachmentDraft: (attachmentDraftId: AttachmentDraftId, delta: 1 | -1) => void;
@@ -38,6 +38,8 @@ export interface AttachmentsDraftsStore extends AttachmentDraftsState {
    */
   takeFragmentsByType: (fragmentsType: DMessageAttachmentFragment['part']['pt'], attachmentDraftId: AttachmentDraftId | null, removeFragments: boolean) => DMessageAttachmentFragment[];
 
+  removeAttachmentDraftOutputFragment: (attachmentDraftId: AttachmentDraftId, fragmentIndex: number) => void;
+
   _editAttachment: (attachmentDraftId: AttachmentDraftId, update: Partial<Omit<AttachmentDraft, 'outputFragments'>> | ((attachment: AttachmentDraft) => Partial<Omit<AttachmentDraft, 'outputFragments'>>)) => void;
   _replaceAttachmentOutputFragments: (attachmentDraftId: AttachmentDraftId, outputFragments: DMessageAttachmentFragment[]) => void;
   _getAttachment: (attachmentDraftId: AttachmentDraftId) => AttachmentDraft | undefined;
@@ -52,7 +54,7 @@ export const createAttachmentDraftsStoreSlice: StateCreator<AttachmentsDraftsSto
   attachmentDrafts: [],
 
   // actions
-  createAttachmentDraft: async (source: AttachmentDraftSource) => {
+  createAttachmentDraft: async (source: AttachmentDraftSource, options: AttachmentCreationOptions) => {
     const { _getAttachment, _editAttachment, toggleAttachmentDraftConverterAndConvert } = _get();
 
     const _attachmentDraft = attachmentCreate(source);
@@ -70,7 +72,7 @@ export const createAttachmentDraftsStoreSlice: StateCreator<AttachmentsDraftsSto
       return;
 
     // 2. Define the I->O Converters
-    attachmentDefineConverters(source, loaded.input, editFn);
+    attachmentDefineConverters(source, loaded.input, options, editFn);
     const defined = _getAttachment(attachmentDraftId);
     if (!defined?.converters.length)
       return;
@@ -238,6 +240,45 @@ export const createAttachmentDraftsStoreSlice: StateCreator<AttachmentsDraftsSto
 
     return textFragments;
   },
+
+
+  removeAttachmentDraftOutputFragment: (attachmentDraftId: AttachmentDraftId, fragmentIndex: number) =>
+    _set((state) => {
+      const { attachmentDrafts } = state;
+
+      // Find Attachment Draft
+      const attachmentIndex = attachmentDrafts.findIndex((a) => a.id === attachmentDraftId);
+      if (attachmentIndex === -1) return state;
+
+      // Find the Fragment
+      const attachment = attachmentDrafts[attachmentIndex];
+      const fragmentToRemove = attachment.outputFragments[fragmentIndex];
+      if (!fragmentToRemove) return state;
+
+      // Removal: rmeove associated DBlob items (there are no other references to the fragment, it's only the attachment)
+      void removeAttachmentOwnedDBAsset(fragmentToRemove);
+
+      // Create a new array of fragments without the removed one
+      const newOutputFragments = [...attachment.outputFragments];
+      newOutputFragments.splice(fragmentIndex, 1);
+
+      // If there are no fragments left, remove the entire attachment draft
+      if (newOutputFragments.length === 0) {
+        const newAttachments = [...attachmentDrafts];
+        newAttachments.splice(attachmentIndex, 1);
+        return {
+          attachmentDrafts: newAttachments,
+        };
+      }
+
+      // Update the attachment draft with the new fragments
+      const newAttachments = [...attachmentDrafts];
+      newAttachments[attachmentIndex] = { ...attachment, outputFragments: newOutputFragments };
+      return {
+        attachmentDrafts: newAttachments,
+      };
+    }),
+
 
   _editAttachment: (attachmentDraftId: AttachmentDraftId, update: Partial<Omit<AttachmentDraft, 'outputFragments'>> | ((attachment: AttachmentDraft) => Partial<Omit<AttachmentDraft, 'outputFragments'>>)) =>
     _set(state => ({

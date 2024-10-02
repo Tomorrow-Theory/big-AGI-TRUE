@@ -7,6 +7,30 @@ import AttachFileRoundedIcon from '@mui/icons-material/AttachFileRounded';
 import { KeyStroke } from '~/common/components/KeyStroke';
 
 
+export async function openFileForAttaching(
+  multiple: boolean,
+  onAttachFiles: (files: FileWithHandle[], errorMessage: string | null) => void | Promise<void>,
+): Promise<void> {
+  try {
+    const selectedFiles = await fileOpen({ multiple });
+    if (selectedFiles) {
+      if (Array.isArray(selectedFiles)) {
+        if (selectedFiles.length)
+          await onAttachFiles(selectedFiles, null);
+      } else {
+        await onAttachFiles([selectedFiles], null);
+      }
+    }
+  } catch (error: any) {
+    // ignore user abort errors, but show others
+    if (error?.name !== 'AbortError') {
+      console.warn('[DEV] openFileForAttaching error:', { error });
+      await onAttachFiles([], error?.message || error?.toString() || 'unknown file open error');
+    }
+  }
+}
+
+
 const attachFileLegend =
   <Box sx={{ px: 1, py: 0.75, lineHeight: '1.5rem' }}>
     <b>Attach files</b><br />
@@ -15,29 +39,15 @@ const attachFileLegend =
   </Box>;
 
 
-export async function openFileForAttaching(
-  multiple: boolean,
-  onAttachFiles: (files: FileWithHandle[]) => void,
-) {
-  try {
-    const selectedFiles = await fileOpen({ multiple });
-    if (selectedFiles) {
-      if (Array.isArray(selectedFiles)) {
-        if (selectedFiles.length)
-          onAttachFiles(selectedFiles);
-      } else {
-        onAttachFiles([selectedFiles]);
-      }
-    }
-  } catch (error) {
-    // ignore...
-  }
-}
-
-
 export const ButtonAttachFilesMemo = React.memo(ButtonAttachFiles);
 
-function ButtonAttachFiles(props: { isMobile?: boolean, fullWidth?: boolean, multiple?: boolean, noToolTip?: boolean, onAttachFiles: (files: FileWithHandle[]) => void }) {
+function ButtonAttachFiles(props: {
+  isMobile?: boolean,
+  fullWidth?: boolean,
+  multiple?: boolean,
+  noToolTip?: boolean,
+  onAttachFiles: (files: FileWithHandle[], errorMessage: string | null) => void,
+}) {
 
   const { onAttachFiles } = props;
 

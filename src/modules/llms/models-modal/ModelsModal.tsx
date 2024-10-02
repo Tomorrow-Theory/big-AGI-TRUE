@@ -3,7 +3,7 @@ import * as React from 'react';
 import { Box, Checkbox, Divider } from '@mui/joy';
 
 import type { DModelsService, DModelsServiceId } from '~/common/stores/llms/modelsservice.types';
-import { GoodModal } from '~/common/components/GoodModal';
+import { GoodModal } from '~/common/components/modals/GoodModal';
 import { llmsStoreState } from '~/common/stores/llms/store-llms';
 import { optimaActions, optimaOpenModels, useOptimaModelsModalsState } from '~/common/layout/optima/useOptima';
 import { runWhenIdle } from '~/common/util/pwaUtils';
@@ -67,7 +67,8 @@ export function ModelsModal(props: { suspendAutoModelsSetup?: boolean }) {
       title={<>Configure <b>AI Models</b></>}
       startButton={
         multiService ? <Checkbox
-          label='All Services' sx={{ my: 'auto' }}
+          label='All Services'
+          sx={{ my: 'auto' }}
           checked={showAllServices} onChange={() => setShowAllServices(all => !all)}
         /> : undefined
       }

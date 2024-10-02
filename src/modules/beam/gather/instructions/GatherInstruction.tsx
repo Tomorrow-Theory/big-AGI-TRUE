@@ -4,10 +4,10 @@ import { Typography } from '@mui/joy';
 
 import { ChatMessage } from '../../../../apps/chat/components/message/ChatMessage';
 
-import { aixChatGenerateContentStreaming, AixChatGenerateDMessageUpdate } from '~/modules/aix/client/aix.client';
+import { AixChatGenerateContent_DMessage, aixChatGenerateContent_DMessage_FromHistory } from '~/modules/aix/client/aix.client';
 import { bareBonesPromptMixer } from '~/modules/persona/pmix/pmix';
 
-import { createDMessageTextContent, DMessage, messageFragmentsReduceText } from '~/common/stores/chat/chat.message';
+import { createDMessageTextContent, DMessage, messageFragmentsReduceText, messageWasInterruptedAtStart } from '~/common/stores/chat/chat.message';
 import { getIsMobile } from '~/common/components/useMatchMedia';
 import { getUXLabsHighPerformance } from '~/common/state/store-ux-labs';
 
@@ -65,7 +65,7 @@ export async function executeGatherInstruction(_i: GatherInstruction, inputs: Ex
   ];
 
   // update the UI
-  const onMessageUpdated = (update: AixChatGenerateDMessageUpdate, completed: boolean) => {
+  const onMessageUpdated = (update: AixChatGenerateContent_DMessage, completed: boolean) => {
     // in-place update of the intermediate message
     const { fragments: incrementalFragments, ...incrementalRest } = update;
     Object.assign(inputs.intermediateDMessage, incrementalRest);
@@ -91,7 +91,7 @@ export async function executeGatherInstruction(_i: GatherInstruction, inputs: Ex
         const isMobile = getIsMobile(); // no need to react to this
         // recreate the UI for this
         inputs.updateInstructionComponent(
-          <ChatMessage
+          <ChatMessage /* Not Memo as this changes frequently */
             message={inputs.intermediateDMessage}
             fitScreen={isMobile}
             isMobile={isMobile}
@@ -105,14 +105,17 @@ export async function executeGatherInstruction(_i: GatherInstruction, inputs: Ex
   };
 
   // stream the gathered message
-  return aixChatGenerateContentStreaming(
+  return aixChatGenerateContent_DMessage_FromHistory(
     inputs.llmId,
     gatherHistory,
     'beam-gather', inputs.contextRef,
-    getUXLabsHighPerformance() ? 0 : 1,
-    inputs.chainAbortController.signal,
+    { abortSignal: inputs.chainAbortController.signal, throttleParallelThreads: getUXLabsHighPerformance() ? 0 : 1 },
     onMessageUpdated,
   ).then((status) => {
+
+    const clearFragments = messageWasInterruptedAtStart(status.lastDMessage);
+    if (clearFragments)
+      inputs.intermediateDMessage.fragments = [];
 
     // re-throw errors, as streamAssistantMessage catches internally
     if (status.outcome === 'aborted') {

@@ -1,8 +1,8 @@
 import { aixChatGenerateRequestSimple } from '~/modules/aix/client/aix.client.chatGenerateRequest';
-import { aixCreateChatGenerateNSContext, aixLLMChatGenerateContent } from '~/modules/aix/client/aix.client';
+import { aixChatGenerateContent_DMessage, aixCreateChatGenerateNSContext } from '~/modules/aix/client/aix.client';
 
 import { getConversation, useChatStore } from '~/common/stores/chat/store-chats';
-import { getFastLLMId } from '~/common/stores/llms/store-llms';
+import { getFastLLMIdOrThrow } from '~/common/stores/llms/store-llms';
 import { isTextPart } from '~/common/stores/chat/chat.fragments';
 import { messageFragmentsReduceText } from '~/common/stores/chat/chat.message';
 
@@ -14,9 +14,13 @@ import { messageFragmentsReduceText } from '~/common/stores/chat/chat.message';
 export async function autoConversationTitle(conversationId: string, forceReplace: boolean): Promise<boolean> {
 
   // use valid fast model
-  const fastLLMId = getFastLLMId();
-  if (!fastLLMId)
+  let fastLLMId;
+  try {
+    fastLLMId = getFastLLMIdOrThrow('conversation titler');
+  } catch (error) {
+    console.log(`autoConversationTitle: ${error}`);
     return false;
+  }
 
   // only operate on valid conversations, without any title
   const conversation = getConversation(conversationId);
@@ -42,7 +46,7 @@ export async function autoConversationTitle(conversationId: string, forceReplace
   try {
 
     // LLM chat-generate call
-    const { fragments, generator } = await aixLLMChatGenerateContent(
+    const { fragments, generator } = await aixChatGenerateContent_DMessage(
       fastLLMId,
       aixChatGenerateRequestSimple(
         'You are an AI conversation titles assistant who specializes in creating expressive yet few-words chat titles.',
@@ -57,7 +61,7 @@ ${historyLines.join('\n')}
         }]),
       aixCreateChatGenerateNSContext('chat-ai-title', conversationId),
       false,
-      new AbortController().signal, // we don't abort
+      { abortSignal: new AbortController().signal /* we don't abort */ },
     );
 
     // parse response

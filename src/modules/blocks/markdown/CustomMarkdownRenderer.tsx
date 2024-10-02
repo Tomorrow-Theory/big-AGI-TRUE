@@ -11,6 +11,8 @@ import { remarkMark } from 'remark-mark-highlight';
 import { Button } from '@mui/joy';
 import DownloadIcon from '@mui/icons-material/Download';
 
+import { wrapWithMarkdownSyntax } from './markdown.wrapper';
+
 
 // LinkRenderer adds a target="_blank" to all links
 
@@ -26,14 +28,15 @@ const LinkRenderer = ({ children, node, ...props }: LinkRendererProps) => (
 );
 
 
+// DelRenderer adds a strikethrough to the text
+function DelRenderer({ children }: { children: React.ReactNode }) {
+  return <del className='agi-content-delete'>{children}</del>;
+}
+
 // Mark Renderer adds a yellow background to the text
 function MarkRenderer({ children }: { children: React.ReactNode }) {
   // Mark by default has a yellow background, but we want to set a custom class here, so we can style it
-  return (
-    <mark className='agi-highlight'>
-      {children}
-    </mark>
-  );
+  return <mark className='agi-highlight'>{children}</mark>;
 }
 
 
@@ -74,12 +77,14 @@ function _extractTableData(children: React.JSX.Element) {
 
   // Function to extract text from a React element or component
   function extractText(element: any): String {
+    if (element === null)
+      return '';
     // Base case: if the element is a string, return it
     if (typeof element === 'string') {
       return element;
     }
     // If the element has children, recursively extract text from them
-    if (element.props && element.props.children) {
+    if (element.props?.children) {
       if (Array.isArray(element.props.children)) {
         return element.props.children.map(extractText).join('');
       }
@@ -92,12 +97,12 @@ function _extractTableData(children: React.JSX.Element) {
   function traverseAndExtract(elements: React.JSX.Element, tableData: any[] = []) {
     React.Children.forEach(elements, (element) => {
       if (element.type === 'tr') {
-        const rowData = React.Children.map(element.props.children, (cell) => {
+        const rowData = React.Children.map(element.props?.children, (cell) => {
           // Extract and return the text content of each cell
           return extractText(cell);
         });
         tableData.push(rowData);
-      } else if (element.props && element.props.children) {
+      } else if (element.props?.children) {
         traverseAndExtract(element.props.children, tableData);
       }
     });
@@ -112,7 +117,8 @@ function _extractTableData(children: React.JSX.Element) {
 
 const reactMarkdownComponents = {
   a: LinkRenderer, // override the link renderer to add target="_blank"
-  mark: MarkRenderer, // renders the <mark> tag
+  del: DelRenderer, // renders the <del> tag (~~strikethrough~~)
+  mark: MarkRenderer, // renders the <mark> tag (==highlight==)
   table: TableRenderer, // override the table renderer to show the download CSV links
   // math/inlineMath components are not needed, rehype-katex handles this automatically
 } as ReactMarkdownComponents;
@@ -139,8 +145,9 @@ const preprocessMarkdown = (markdownText: string) => markdownText
   .replace(/\s\\\((.*?)\\\)/gs, (_match, p1) => ` $$${p1}$$`) // Replace inline LaTeX delimiters \( and \) with $$
   .replace(/\s\\\[(.*?)\\]/gs, (_match, p1) => ` $$${p1}$$`) // Replace block LaTeX delimiters \[ and \] with $$
   // Replace <mark>...</mark> with ==...==, but not in multiple lines, or if preceded by a backtick (disabled, was (?<!`))
-  .replace(/<mark>(.+?)<\/mark>/g, (_match, p1) => ` ==${p1}==`);
-
+  .replace(/<mark>([\s\S]*?)<\/mark>/g, (_match, p1) => wrapWithMarkdownSyntax(p1, '=='))
+  // Replace <del>...</del> with ~~...~~, but not in multiple lines, or if preceded by a backtick (disabled, was (?<!`))
+  .replace(/<del>([\s\S]*?)<\/del>/g, (_match, p1) => wrapWithMarkdownSyntax(p1, '~~'));
 
 export default function CustomMarkdownRenderer(props: { content: string }) {
   return (

@@ -498,19 +498,20 @@ export namespace AixWire_Particles {
    */
   export type CGSelectMetrics = {
     // T = milliseconds
-    TIn?: number,
+    TIn?: number,         // Portion of Input tokens which is new (not cached)
     TCacheRead?: number,
     TCacheWrite?: number,
     TOut?: number,
-    TOutR?: number,
-
-    // v = Tokens/s
-    vTOutInner?: number,  // TOut / dtInner
+    TOutR?: number,       // Portion of TOut that was used for reasoning (e.g. not for output)
+    // TOutA?: number,    // Portion of TOut that was used for Audio
 
     // dt = milliseconds
     dtStart?: number,
     dtInner?: number,
     dtAll?: number,
+
+    // v = Tokens/s
+    vTOutInner?: number,  // TOut / dtInner
   };
 
   // TextParticle / PartParticle - keep in line with the DMessage*Part counterparts
