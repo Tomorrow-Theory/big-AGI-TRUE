@@ -3,6 +3,11 @@ import type { StateCreator } from 'zustand/vanilla';
 import { agiUuid } from '~/common/util/idUtils';
 
 
+// configuration
+export const EPHEMERALS_DEFAULT_TIMEOUT = 6000;
+const EPHEMERALS_DEFAULT_MINIMIZED = true;
+
+
 /**
  * DEphemeral: For ReAct sidebars, displayed under the chat
  */
@@ -11,8 +16,9 @@ export interface DEphemeral {
   title: string;
   text: string;
   state: object;
-  done: boolean;
-  pinned: boolean;
+  done: boolean;        // is complete, shall close after timeout
+  minimized: boolean;   // collapsed to a single line
+  showStatePane: boolean;   // show the state object
 }
 
 type DEphemeralId = string;
@@ -24,14 +30,16 @@ export function createDEphemeral(title: string, initialText: string): DEphemeral
     text: initialText,
     state: {},
     done: false,
-    pinned: lastEphemeralPinned,
+    minimized: lastMinimized,
+    showStatePane: lastShowStatePane,
   };
 }
 
 
 /// Ephemerals Overlay Store ///
 
-let lastEphemeralPinned = false;
+let lastMinimized = EPHEMERALS_DEFAULT_MINIMIZED;
+let lastShowStatePane = false;
 
 interface EphemeralsOverlayState {
 
@@ -45,8 +53,10 @@ export interface EphemeralsOverlayStore extends EphemeralsOverlayState {
   ephemeralsDelete: (ephemeralId: DEphemeralId) => void;
   ephemeralsUpdate: (ephemeralId: DEphemeralId, update: Partial<DEphemeral>) => void;
 
-  ephemeralsIsPinned: (ephemeralId: DEphemeralId) => boolean;
-  ephemeralsTogglePinned: (ephemeralId: DEphemeralId) => void;
+  ephemeralsToggleMinimized: (ephemeralId: DEphemeralId) => void;
+  ephemeralsToggleShowStatePane: (ephemeralId: DEphemeralId) => void;
+
+  getEphemeral: (ephemeralId: DEphemeralId) => Readonly<DEphemeral> | undefined;
 
 }
 
@@ -69,8 +79,10 @@ export const createEphemeralsOverlayStoreSlice: StateCreator<EphemeralsOverlaySt
 
   ephemeralsUpdate: (ephemeralId, update) =>
     _set((state) => {
-      if (update.pinned !== undefined)
-        lastEphemeralPinned = update.pinned;
+      if (update.minimized !== undefined)
+        lastMinimized = update.minimized;
+      if (update.showStatePane !== undefined)
+        lastShowStatePane = update.showStatePane;
       return {
         ephemerals: state.ephemerals.map((e) =>
           e.id === ephemeralId
@@ -80,18 +92,21 @@ export const createEphemeralsOverlayStoreSlice: StateCreator<EphemeralsOverlaySt
       };
     }),
 
-  ephemeralsIsPinned: (ephemeralId) =>
-    _get().ephemerals.find((e) => e.id === ephemeralId)?.pinned || false,
-
-  ephemeralsTogglePinned: (ephemeralId) => {
-    const { ephemerals, ephemeralsDelete, ephemeralsUpdate } = _get();
+  ephemeralsToggleMinimized: (ephemeralId) => {
+    const { ephemerals, ephemeralsUpdate } = _get();
     const ephemeral = ephemerals.find((e) => e.id === ephemeralId);
-    if (ephemeral) {
-      if (ephemeral.pinned && ephemeral.done)
-        ephemeralsDelete(ephemeralId);
-      else
-        ephemeralsUpdate(ephemeralId, { pinned: !ephemeral.pinned });
-    }
+    if (ephemeral)
+      ephemeralsUpdate(ephemeralId, { minimized: !ephemeral.minimized });
   },
+
+  ephemeralsToggleShowStatePane: (ephemeralId) => {
+    const { ephemerals, ephemeralsUpdate } = _get();
+    const ephemeral = ephemerals.find((e) => e.id === ephemeralId);
+    if (ephemeral)
+      ephemeralsUpdate(ephemeralId, { showStatePane: !ephemeral.showStatePane });
+  },
+
+  getEphemeral: (ephemeralId) =>
+    _get().ephemerals.find((e) => e.id === ephemeralId),
 
 });

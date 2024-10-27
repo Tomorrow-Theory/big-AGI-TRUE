@@ -43,7 +43,7 @@ import { TooltipOutlined } from '~/common/components/TooltipOutlined';
 import { adjustContentScaling, themeScalingMap, themeZIndexChatBubble } from '~/common/app.theme';
 import { avatarIconSx, makeMessageAvatarIcon, messageBackground, useMessageAvatarLabel } from '~/common/util/dMessageUtils';
 import { copyToClipboard } from '~/common/util/clipboardUtils';
-import { createTextContentFragment, DMessageFragment, DMessageFragmentId } from '~/common/stores/chat/chat.fragments';
+import { createTextContentFragment, DMessageFragment, DMessageFragmentId, updateFragmentWithEditedText } from '~/common/stores/chat/chat.fragments';
 import { useUIPreferencesStore } from '~/common/state/store-ui';
 import { useUXLabsStore } from '~/common/state/store-ux-labs';
 
@@ -53,7 +53,7 @@ import { DocumentAttachmentFragments } from './fragments-attachment-doc/Document
 import { ImageAttachmentFragments } from './fragments-attachment-image/ImageAttachmentFragments';
 import { InReferenceToList } from './in-reference-to/InReferenceToList';
 import { messageAsideColumnSx, messageAvatarLabelAnimatedSx, messageAvatarLabelSx, messageZenAsideColumnSx } from './ChatMessage.styles';
-import { useChatShowTextDiff } from '../../store-app-chat';
+import { setIsNotificationEnabledForModel, useChatShowTextDiff } from '../../store-app-chat';
 import { useFragmentBuckets } from './useFragmentBuckets';
 import { useSelHighlighterMemo } from './useSelHighlighterMemo';
 
@@ -207,13 +207,13 @@ export function ChatMessage(props: {
   const isVndAndCacheUser = !!props.showAntPromptCaching && messageHasUserFlag(props.message, MESSAGE_FLAG_VND_ANT_CACHE_USER);
 
   const {
-    imageAttachments,     // Stamp-sized Images
-    contentFragments,     // Text (Markdown + Code + ... blocks), Errors, (large) Images, Placeholders
-    nonImageAttachments,  // Document Attachments, likely the User dropped them in
+    imageAttachments,       // Stamp-sized Images
+    contentOrVoidFragments, // Text (Markdown + Code + ... blocks), Errors, (large) Images, Placeholders
+    nonImageAttachments,    // Document Attachments, likely the User dropped them in
   } = useFragmentBuckets(messageFragments);
 
   const fragmentFlattenedText = React.useMemo(() => messageFragmentsReduceText(messageFragments), [messageFragments]);
-  const handleHighlightSelText = useSelHighlighterMemo(messageId, selText, contentFragments, fromAssistant, props.onMessageFragmentReplace);
+  const handleHighlightSelText = useSelHighlighterMemo(messageId, selText, contentOrVoidFragments, fromAssistant, props.onMessageFragmentReplace);
 
   const textSubject = selText ? selText : fragmentFlattenedText;
   const isSpecialT2I = textSubject.startsWith('https://images.prodia.xyz/') || textSubject.startsWith('/draw ') || textSubject.startsWith('/imagine ') || textSubject.startsWith('/img ');
@@ -246,11 +246,17 @@ export function ChatMessage(props: {
   const isEditingText = !!textContentEditState;
 
   const handleApplyEdit = React.useCallback((fragmentId: DMessageFragmentId, editedText: string) => {
-    if (editedText.length > 0)
-      handleFragmentReplace(fragmentId, createTextContentFragment(editedText));
-    else
-      handleFragmentDelete(fragmentId);
-  }, [handleFragmentDelete, handleFragmentReplace]);
+    // perform deletion of the fragment if the text is empty
+    if (!editedText.length)
+      return handleFragmentDelete(fragmentId);
+
+    // find the fragment to be replaced
+    const oldFragment = messageFragments.find(f => f.fId === fragmentId);
+    if (!oldFragment) return;
+    const newFragment = updateFragmentWithEditedText(oldFragment, editedText);
+    if (newFragment)
+      handleFragmentReplace(fragmentId, newFragment);
+  }, [handleFragmentDelete, handleFragmentReplace, messageFragments]);
 
   const handleApplyAllEdits = React.useCallback(async (withControl: boolean) => {
     const state = textContentEditState || {};
@@ -316,8 +322,10 @@ export function ChatMessage(props: {
   }, [messageId, onMessageToggleUserFlag]);
 
   const handleOpsToggleNotifyComplete = React.useCallback(() => {
+    // also remember the preference, for auto-setting flags by the persona
+    setIsNotificationEnabledForModel(messageId, !isUserNotifyComplete);
     onMessageToggleUserFlag?.(messageId, MESSAGE_FLAG_NOTIFY_COMPLETE);
-  }, [messageId, onMessageToggleUserFlag]);
+  }, [isUserNotifyComplete, messageId, onMessageToggleUserFlag]);
 
   const handleOpsAssistantFrom = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -500,8 +508,8 @@ export function ChatMessage(props: {
   }, [handleContextMenu]);
 
   const handleBlocksDoubleClick = React.useCallback((event: React.MouseEvent) => {
-    if (doubleClickToEdit || event.shiftKey)
-      props.onMessageFragmentReplace && handleOpsEditToggle(event);
+    if ((doubleClickToEdit || event.shiftKey) && props.onMessageFragmentReplace)
+      handleOpsEditToggle(event);
   }, [doubleClickToEdit, handleOpsEditToggle, props.onMessageFragmentReplace]);
 
   const handleBlocksMouseUp = React.useCallback((event: React.MouseEvent) => {
@@ -543,7 +551,7 @@ export function ChatMessage(props: {
       // borderTopLeftRadius: '0.375rem',
       // borderBottomLeftRadius: '0.375rem',
     }),
-    ...(isVndAndCacheAuto && !isVndAndCacheUser && {
+    ...(uiComplexityMode === 'extra' && isVndAndCacheAuto && !isVndAndCacheUser && {
       position: 'relative',
       '&::before': {
         content: '""',
@@ -555,6 +563,7 @@ export function ChatMessage(props: {
         background: `repeating-linear-gradient( -45deg, transparent, transparent 2px, ${ModelVendorAnthropic.brandColor} 2px, ${ModelVendorAnthropic.brandColor} 12px ) repeat`,
       },
     }),
+    // style: when the user skips the message
     ...(isUserMessageSkipped && messageSkippedSx),
 
     // for: ENABLE_COPY_MESSAGE_OVERLAY
@@ -585,6 +594,7 @@ export function ChatMessage(props: {
     <Box
       component='li'
       role='chat-message'
+      tabIndex={-1 /* for shortcuts navigation */}
       onMouseUp={(ENABLE_BUBBLE && !fromSystem /*&& !isAssistantError*/) ? handleBlocksMouseUp : undefined}
       sx={listItemSx}
       // className={messagePendingIncomplete ? 'agi-border-4' /* CSS Effect while in progress */ : undefined}
@@ -692,7 +702,7 @@ export function ChatMessage(props: {
 
           {/* Content Fragments */}
           <ContentFragments
-            fragments={contentFragments}
+            fragments={contentOrVoidFragments}
             showEmptyNotice={!messageFragments.length && !messagePendingIncomplete}
 
             contentScaling={adjContentScaling}

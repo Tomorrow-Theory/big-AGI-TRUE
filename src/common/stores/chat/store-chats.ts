@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { createJSONStorage, persist } from 'zustand/middleware';
+import { persist } from 'zustand/middleware';
 import { useShallow } from 'zustand/react/shallow';
 
 import type { SystemPurposeId } from '../../../data';
@@ -8,7 +8,7 @@ import type { DLLMId } from '~/common/stores/llms/llms.types';
 import { findLLMOrThrow, getChatLLMId } from '~/common/stores/llms/store-llms';
 
 import { agiUuid } from '~/common/util/idUtils';
-import { backupIdbV3, idbStateStorage } from '~/common/util/idbUtils';
+import { backupIdbV3, createIDBPersistStorage } from '~/common/util/idbUtils';
 
 import { workspaceActions } from '~/common/stores/workspace/store-client-workspace';
 import { workspaceForConversationIdentity } from '~/common/stores/workspace/workspace.types';
@@ -16,7 +16,7 @@ import { workspaceForConversationIdentity } from '~/common/stores/workspace/work
 import { DMessage, DMessageId, DMessageMetadata, MESSAGE_FLAG_AIX_SKIP, messageHasUserFlag } from './chat.message';
 import type { DMessageFragment, DMessageFragmentId } from './chat.fragments';
 import { V3StoreDataToHead, V4ToHeadConverters } from './chats.converters';
-import { conversationTitle, createDConversation, DConversation, DConversationId, duplicateDConversationNoPH } from './chat.conversation';
+import { conversationTitle, createDConversation, DConversation, DConversationId, duplicateDConversationNoVoid } from './chat.conversation';
 import { estimateTokensForFragments } from './chat.tokens';
 
 
@@ -35,7 +35,7 @@ export interface ChatActions {
   deleteConversations: (cIds: DConversationId[], newConversationPersonaId?: SystemPurposeId) => DConversationId;
 
   // within a conversation
-  setAbortController: (cId: DConversationId, _abortController: AbortController | null) => void;
+  setAbortController: (cId: DConversationId, _abortController: AbortController | null, debugScope: string) => void;
   abortConversationTemp: (cId: DConversationId) => void;
   historyReplace: (cId: DConversationId, messages: DMessage[]) => void;
   historyTruncateToIncluded: (cId: DConversationId, mId: DMessageId, offset: number) => void;
@@ -120,7 +120,7 @@ export const useChatStore = create<ConversationsStore>()(/*devtools(*/
         if (!conversation)
           return null;
 
-        const branched = duplicateDConversationNoPH(conversation, messageId ?? undefined);
+        const branched = duplicateDConversationNoVoid(conversation, messageId ?? undefined);
 
         _set({
           conversations: [branched, ...conversations],
@@ -174,11 +174,20 @@ export const useChatStore = create<ConversationsStore>()(/*devtools(*/
           ),
         })),
 
-      setAbortController: (conversationId: DConversationId, _abortController: AbortController | null) =>
-        _get()._editConversation(conversationId, () =>
-          ({
-            _abortController: _abortController,
-          })),
+      setAbortController: (conversationId: DConversationId, _nextController: AbortController | null, debugScope: string) =>
+        _get()._editConversation(conversationId, ({ _abortController: _currentController }) => {
+          // [DEV] Debug state management of controllers - FIXME: migrate away from a per-chat, unless done properly (cascade triggering)
+          if (_nextController !== null && _currentController) {
+            const isAlreadyAborted = _currentController.signal.aborted;
+            if (process.env.NODE_ENV === 'development')
+              console.warn(`[DEV] setAbortController (${debugScope}): race condition (${isAlreadyAborted ? 'Already aborted' : 'Not aborted'}) for conversation ${conversationId}`);
+            if (!isAlreadyAborted)
+              _currentController.abort();
+          }
+          return {
+            _abortController: _nextController,
+          };
+        }),
 
       abortConversationTemp: (conversationId: DConversationId) =>
         _get()._editConversation(conversationId, conversation => {
@@ -391,7 +400,7 @@ export const useChatStore = create<ConversationsStore>()(/*devtools(*/
        *  - 4: [2024-05-14] Convert messages to multi-part, removed the IDB migration
        */
       version: 4,
-      storage: createJSONStorage(() => idbStateStorage),
+      storage: createIDBPersistStorage<ConversationsStore>(),
 
       // Migrations
       migrate: async (state: any, fromVersion: number) => {

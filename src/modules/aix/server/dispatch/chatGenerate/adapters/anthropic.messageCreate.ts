@@ -1,6 +1,6 @@
 import { escapeXml } from '~/server/wire';
 
-import { AixAPI_Model, AixAPIChatGenerate_Request, AixMessages_ChatMessage, AixParts_MetaInReferenceToPart, AixTools_ToolDefinition, AixTools_ToolsPolicy } from '../../../api/aix.wiretypes';
+import type { AixAPI_Model, AixAPIChatGenerate_Request, AixMessages_ChatMessage, AixParts_MetaInReferenceToPart, AixTools_ToolDefinition, AixTools_ToolsPolicy } from '../../../api/aix.wiretypes';
 import { AnthropicWire_API_Message_Create, AnthropicWire_Blocks } from '../../wiretypes/anthropic.wiretypes';
 
 
@@ -87,8 +87,10 @@ export function aixToAnthropicMessageCreate(model: AixAPI_Model, chatGenerate: A
 
   // Preemptive error detection with server-side payload validation before sending it upstream
   const validated = AnthropicWire_API_Message_Create.Request_schema.safeParse(payload);
-  if (!validated.success)
-    throw new Error(`Invalid message sequence for Anthropic models: ${validated.error.errors?.[0]?.message || validated.error.message || validated.error}`);
+  if (!validated.success) {
+    console.error('Anthropic: invalid messageCreate payload. Error:', validated.error.message);
+    throw new Error(`Invalid sequence for Anthropic models: ${validated.error.errors?.[0]?.message || validated.error.message || validated.error}.`);
+  }
 
   return validated.data;
 }

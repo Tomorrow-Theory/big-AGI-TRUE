@@ -1,6 +1,7 @@
 import type { RenderBlockInputs } from './blocks.types';
 import { heuristicAllMarkdownImageReferences } from './image/RenderImageURL';
 import { heuristicIsBlockPureHTML } from './danger-html/RenderDangerousHtml';
+import { countLines } from '~/common/util/textUtils';
 
 
 export function parseBlocksFromText(text: string): RenderBlockInputs {
@@ -21,7 +22,7 @@ export function parseBlocksFromText(text: string): RenderBlockInputs {
     // codeBlock: /`{3,}([\S\x20]+)?\n([\s\S]*?)(`{3,}\n?|$)/g,
     // This is way more promising, but will either not perform a partial match (no match at all) or match a single line
     // codeBlock: /^( {0,3})`{3,}([^\n`]*)\n([\s\S]*?)(?:\n^\1`{3,}[^\S\n]*(?=\n|$))?/gm,
-    codeBlock: /`{3,}([^\n`]*)\n([\s\S]*?)(`{3,}(?=[ *\n])|$)/g,
+    codeBlock: /`{3,}([^\n`]*)\n([\s\S]*?)(`{3,}(?=[ *\n]|$)|$)/g,
     htmlCodeBlock: /<!DOCTYPE html>([\s\S]*?)<\/html>/gi,
     svgBlock: /<svg (xmlns|width|viewBox)=([\s\S]*?)<\/svg>/g,
   };
@@ -57,19 +58,19 @@ export function parseBlocksFromText(text: string): RenderBlockInputs {
     switch (matchType) {
       case 'codeBlock':
         const blockTitle: string = (match[1] || '').trim();
-        // note: we don't trim blockCode to preserve leading spaces, however if the last line is only made of spaces, we trim that
-        const blockCode: string = match[2].replace(/\s+$/, '');
+        // note: we don't trim blockCode to preserve leading spaces, however if the last line is only made of spaces or tabs, we trim that
+        const blockCode: string = match[2].replace(/[\t ]+$/, '');
         const blockEnd: string = match[3];
-        blocks.push({ bkt: 'code-bk', title: blockTitle, code: blockCode, isPartial: !blockEnd.startsWith('```') });
+        blocks.push({ bkt: 'code-bk', title: blockTitle, code: blockCode, lines: countLines(blockCode), isPartial: !blockEnd.startsWith('```') });
         break;
 
       case 'htmlCodeBlock':
         const preMatchHtml: string = `<!DOCTYPE html>${match[1]}</html>`;
-        blocks.push({ bkt: 'code-bk', title: 'html', code: preMatchHtml, isPartial: false });
+        blocks.push({ bkt: 'code-bk', title: 'html', code: preMatchHtml, lines: countLines(preMatchHtml), isPartial: false });
         break;
 
       case 'svgBlock':
-        blocks.push({ bkt: 'code-bk', title: 'svg', code: match[0], isPartial: false });
+        blocks.push({ bkt: 'code-bk', title: 'svg', code: match[0], lines: countLines(match[0]), isPartial: false });
         break;
     }
 

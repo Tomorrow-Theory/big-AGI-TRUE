@@ -1,8 +1,8 @@
-import { z, type ZodObject } from 'zod';
+import type { ZodObject } from 'zod';
 
 import type { AixAPIChatGenerate_Request } from '~/modules/aix/server/api/aix.wiretypes';
-import { aixChatGenerateContent_DMessage, aixCreateChatGenerateStreamContext } from '~/modules/aix/client/aix.client';
-import { aixChatGenerateRequestSimple } from '~/modules/aix/client/aix.client.chatGenerateRequest';
+import { aixChatGenerateContent_DMessage, aixCreateChatGenerateContext } from '~/modules/aix/client/aix.client';
+import { aixCGR_FromSimpleText } from '~/modules/aix/client/aix.client.chatGenerateRequest';
 import { aixFunctionCallTool, aixRequireSingleFunctionCallInvocation } from '~/modules/aix/client/aix.client.fromSimpleFunction';
 
 import { getLLMIdOrThrow } from '~/common/stores/llms/store-llms';
@@ -20,9 +20,7 @@ interface CodeFix {
   outputSchema: ZodObject<any>;
 }
 
-const CodeFixes: Record<string, CodeFix> = {
-
-};
+const CodeFixes: Record<string, CodeFix> = {};
 
 
 /**
@@ -45,7 +43,7 @@ export async function agiFixupCode(issueType: CodeFixType, codeToFix: string, er
   };
 
   const aixRequest: AixAPIChatGenerate_Request = {
-    ...aixChatGenerateRequestSimple(
+    ...aixCGR_FromSimpleText(
       processPromptTemplate(config.systemMessage, templateVariables, issueType),
       [{ role: 'user', text: processPromptTemplate(config.userInstructionTemplate, templateVariables, issueType) }],
     ),
@@ -57,7 +55,7 @@ export async function agiFixupCode(issueType: CodeFixType, codeToFix: string, er
       }),
     ],
     toolsPolicy:
-      config.functionPolicy === 'invoke' ?  { type: 'function_call', function_call: { name: config.functionName } }
+      config.functionPolicy === 'invoke' ? { type: 'function_call', function_call: { name: config.functionName } }
         : config.functionPolicy === 'think-then-invoke' ? { type: 'auto' } : undefined,
   };
 
@@ -65,7 +63,7 @@ export async function agiFixupCode(issueType: CodeFixType, codeToFix: string, er
   const { fragments } = await aixChatGenerateContent_DMessage(
     llmId,
     aixRequest,
-    aixCreateChatGenerateStreamContext('DEV', 'DEV'),
+    aixCreateChatGenerateContext('fixup-code', '_DEV_'),
     false,
     { abortSignal, llmOptionsOverride: { llmTemperature: 0 /* chill the model for fixing code, we need valid json, not creativity */ } },
   );

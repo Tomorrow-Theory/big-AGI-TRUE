@@ -9,7 +9,7 @@ import { DiagramConfig, DiagramsModal } from '~/modules/aifn/digrams/DiagramsMod
 import { FlattenerModal } from '~/modules/aifn/flatten/FlattenerModal';
 import { TradeConfig, TradeModal } from '~/modules/trade/TradeModal';
 import { downloadSingleChat, importConversationsFromFilesAtRest, openConversationsAtRestPicker } from '~/modules/trade/trade.client';
-import { imaginePromptFromText } from '~/modules/aifn/imagine/imaginePromptFromText';
+import { imaginePromptFromTextOrThrow } from '~/modules/aifn/imagine/imaginePromptFromText';
 import { speakText } from '~/modules/elevenlabs/elevenlabs.client';
 import { useAreBeamsOpen } from '~/modules/beam/store-beam.hooks';
 import { useCapabilityTextToImage } from '~/modules/t2i/t2i.client';
@@ -18,23 +18,25 @@ import type { DConversation, DConversationId } from '~/common/stores/chat/chat.c
 import type { OptimaBarControlMethods } from '~/common/layout/optima/bar/OptimaBarDropdown';
 import { ConfirmationModal } from '~/common/components/modals/ConfirmationModal';
 import { ConversationsManager } from '~/common/chat-overlay/ConversationsManager';
-import { DMessageAttachmentFragment, DMessageContentFragment, duplicateDMessageFragmentsNoPH } from '~/common/stores/chat/chat.fragments';
 import { LLM_IF_ANT_PromptCaching, LLM_IF_OAI_Vision } from '~/common/stores/llms/llms.types';
 import { OptimaDrawerIn, OptimaToolbarIn } from '~/common/layout/optima/portals/OptimaPortalsIn';
 import { PanelResizeInset } from '~/common/components/panes/GoodPanelResizeHandler';
+import { Release } from '~/common/app.release';
 import { ScrollToBottom } from '~/common/scroll-to-bottom/ScrollToBottom';
 import { ScrollToBottomButton } from '~/common/scroll-to-bottom/ScrollToBottomButton';
+import { ShortcutKey, useGlobalShortcuts } from '~/common/components/shortcuts/useGlobalShortcuts';
 import { WorkspaceIdProvider } from '~/common/stores/workspace/WorkspaceIdProvider';
 import { addSnackbar, removeSnackbar } from '~/common/components/snackbar/useSnackbarsStore';
-import { createDMessageFromFragments, createDMessageTextContent, DMessageMetadata, duplicateDMessageMetadata } from '~/common/stores/chat/chat.message';
+import { createDMessageFromFragments, createDMessagePlaceholderIncomplete, DMessageMetadata, duplicateDMessageMetadata } from '~/common/stores/chat/chat.message';
+import { createErrorContentFragment, createTextContentFragment, DMessageAttachmentFragment, DMessageContentFragment, duplicateDMessageFragmentsNoVoid } from '~/common/stores/chat/chat.fragments';
+import { gcChatImageAssets } from '~/common/stores/chat/chat.gc';
 import { getChatLLMId } from '~/common/stores/llms/store-llms';
 import { getConversation, getConversationSystemPurposeId, useConversation } from '~/common/stores/chat/store-chats';
 import { optimaActions, optimaOpenModels, optimaOpenPreferences, useSetOptimaAppMenu } from '~/common/layout/optima/useOptima';
 import { themeBgAppChatComposer } from '~/common/app.theme';
 import { useChatLLM } from '~/common/stores/llms/llms.hooks';
-import { useFolderStore } from '~/common/state/store-folders';
-import { useGlobalShortcuts } from '~/common/components/shortcuts/useGlobalShortcuts';
-import { useIsMobile } from '~/common/components/useMatchMedia';
+import { useFolderStore } from '~/common/stores/folders/store-chat-folders';
+import { useIsMobile, useIsTallScreen } from '~/common/components/useMatchMedia';
 import { useOverlayComponents } from '~/common/layout/overlays/useOverlayComponents';
 import { useRouterQuery } from '~/common/app.routes';
 import { useUXLabsStore } from '~/common/state/store-ux-labs';
@@ -52,7 +54,6 @@ import { usePanesManager } from './components/panes/usePanesManager';
 import type { ChatExecuteMode } from './execute-mode/execute-mode.types';
 
 import { _handleExecute } from './editors/_handleExecute';
-import { gcChatImageAssets } from './editors/image-generate';
 
 
 // what to say when a chat is new and has no title
@@ -79,6 +80,7 @@ const chatBeamWrapperSx: SxProps = {
 
 const composerOpenSx: SxProps = {
   zIndex: 21, // just to allocate a surface, and potentially have a shadow
+  minWidth: { md: 480 }, // don't get compresses too much on desktop
   backgroundColor: themeBgAppChatComposer,
   borderTop: `1px solid`,
   borderTopColor: 'rgba(var(--joy-palette-neutral-mainChannel, 99 107 116) / 0.4)',
@@ -110,6 +112,7 @@ export function AppChat() {
   const theme = useTheme();
 
   const isMobile = useIsMobile();
+  const isTallScreen = useIsTallScreen();
 
   const intent = useRouterQuery<Partial<AppChatIntent>>();
 
@@ -199,15 +202,17 @@ export function AppChat() {
 
   // [effect] Handle the initial conversation intent
   React.useEffect(() => {
-    intent.initialConversationId && handleOpenConversationInFocusedPane(intent.initialConversationId);
-  }, [handleOpenConversationInFocusedPane, intent.initialConversationId]);
+    if (Release.DevBuild && intent.initialConversationId === 'null')
+      return openConversationInFocusedPane(null! /* for debugging purporse */);
+    intent.initialConversationId && openConversationInFocusedPane(intent.initialConversationId);
+  }, [intent.initialConversationId, openConversationInFocusedPane]);
 
   // [effect] Show snackbar with the focused chat title after a history navigation in focused pane
   React.useEffect(() => {
     if (showNextTitleChange.current) {
       showNextTitleChange.current = false;
       const title = (focusedChatNumber >= 0 ? `#${focusedChatNumber + 1} · ` : '') + (focusedChatTitle || 'New Chat');
-      const id = addSnackbar({ key: 'focused-title', message: title, type: 'title' });
+      const id = addSnackbar({ key: 'focused-title', message: title, type: 'center-title' });
       return () => removeSnackbar(id);
     }
   }, [focusedChatNumber, focusedChatTitle]);
@@ -248,7 +253,7 @@ export function AppChat() {
       // create the user:message
       // NOTE: this can lead to multiple chat messages with data refs that are referring to the same dblobs,
       //       however, we already got transferred ownership of the dblobs at this point.
-      const userMessage = createDMessageFromFragments('user', duplicateDMessageFragmentsNoPH(fragments)); // [chat] create user:message to send per-chat
+      const userMessage = createDMessageFromFragments('user', duplicateDMessageFragmentsNoVoid(fragments)); // [chat] create user:message to send per-chat
       if (metadata) userMessage.metadata = duplicateDMessageMetadata(metadata);
 
       ConversationsManager.getHandler(conversation.id).messageAppend(userMessage); // [chat] append user message in each conversation
@@ -288,14 +293,23 @@ export function AppChat() {
 
   const handleTextDiagram = React.useCallback((diagramConfig: DiagramConfig | null) => setDiagramConfig(diagramConfig), []);
 
-  const handleImagineFromText = React.useCallback(async (conversationId: DConversationId, messageText: string) => {
+  const handleImagineFromText = React.useCallback(async (conversationId: DConversationId, subjectText: string) => {
     const conversation = getConversation(conversationId);
     if (!conversation)
       return;
-    const imaginedPrompt = await imaginePromptFromText(messageText, conversationId) || 'An error sign.';
-    const imaginePrompMessage = createDMessageTextContent('user', imaginedPrompt);
-    ConversationsManager.getHandler(conversationId).messageAppend(imaginePrompMessage);  // [chat] append user:imagine prompt
-    await handleExecuteAndOutcome('generate-image', conversationId, 'chat-imagine-from-text'); // append message for 'imagine', then generate-image
+    const cHandler = ConversationsManager.getHandler(conversationId);
+    const userImagineMessage = createDMessagePlaceholderIncomplete('user', `Thinking at the subject...`); // [chat] append user:imagine prompt
+    cHandler.messageAppend(userImagineMessage);
+    await imaginePromptFromTextOrThrow(subjectText, conversationId)
+      .then(imaginedPrompt => {
+        // Replace the placeholder with the message to draw, then execute the draw
+        cHandler.messageFragmentReplace(userImagineMessage.id, userImagineMessage.fragments[0].fId, createTextContentFragment(imaginedPrompt), true);
+        return handleExecuteAndOutcome('generate-image', conversationId, 'chat-imagine-from-text'); // append message for 'imagine', then generate-image
+      })
+      .catch((error: any) => {
+        // Replace the placeholder with the error message
+        cHandler.messageFragmentReplace(userImagineMessage.id, userImagineMessage.fragments[0].fId, createErrorContentFragment(`Issue requesting an Image prompt. ${error?.message || ''}`), true);
+      });
   }, [handleExecuteAndOutcome]);
 
   const handleTextSpeak = React.useCallback(async (text: string): Promise<void> => {
@@ -475,10 +489,44 @@ export function AppChat() {
     optimaActions().openModelOptions(chatLLMId);
   }, []);
 
+  const handleMoveFocus = React.useCallback((direction: number, wholeList?: boolean) => {
+    // find the parent list
+    let messageListElement: HTMLElement | null;
+    const activeElement = document.activeElement as HTMLElement;
+    if (activeElement)
+      messageListElement = activeElement.closest('[role=chat-messages-list]') as HTMLElement;
+    else
+      messageListElement = document.querySelector('[role=chat-messages-list]') as HTMLElement;
+    if (!messageListElement) return;
+
+    // find the scrollable container and if we're at the bottom
+    const scrollContainer = messageListElement.closest('[role=scrollable]') as HTMLElement;
+    if (!scrollContainer) return;
+    const isAtBottom = Math.abs(scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.clientHeight) < 1;
+
+    // determine the current message and next index
+    const messageElements = Array.from(messageListElement.querySelectorAll('[role=chat-message]')) as HTMLElement[];
+    const currentIndex = messageElements.findIndex(el => el.contains(activeElement));
+
+    // if going down and we're at/past the last message, scroll to bottom
+    const snapToBottom = direction > 0 && (wholeList || (currentIndex === -1 || currentIndex >= messageElements.length - 1));
+    const nextIndex = (wholeList && direction < 0) ? 0
+      : snapToBottom ? messageElements.length - 1
+        : (isAtBottom && direction < 0) ? currentIndex
+          : currentIndex === -1 ? (direction < 0 ? 0 : messageElements.length - 1)
+            : currentIndex + direction;
+    if (nextIndex < 0 || nextIndex >= messageElements.length) return;
+
+    // perform the smooth scroll and focus
+    const targetElement = messageElements[nextIndex];
+    targetElement.focus({ preventScroll: true, focusVisible: true } as FocusOptions);
+    targetElement.scrollIntoView({ behavior: 'smooth', block: snapToBottom ? 'end' : 'start' });
+  }, []);
+
   useGlobalShortcuts('AppChat', React.useMemo(() => [
     // focused conversation
     { key: 'z', ctrl: true, shift: true, disabled: isFocusedChatEmpty, action: handleMessageRegenerateLastInFocusedPane, description: 'Retry' },
-    { key: 'b', ctrl: true, shift: true, disabled: isFocusedChatEmpty, action: handleMessageBeamLastInFocusedPane, description: 'Beam' },
+    { key: 'b', ctrl: true, shift: true, disabled: isFocusedChatEmpty, action: handleMessageBeamLastInFocusedPane, description: 'Beam Edit' },
     { key: 'o', ctrl: true, action: handleConversationsImportFormFilePicker },
     { key: 's', ctrl: true, action: () => handleFileSaveConversation(focusedPaneConversationId) },
     { key: 'n', ctrl: true, shift: true, action: handleConversationNewInFocusedPane },
@@ -486,12 +534,17 @@ export function AppChat() {
     { key: 'd', ctrl: true, shift: true, action: () => focusedPaneConversationId && handleDeleteConversations([focusedPaneConversationId], false) },
     { key: '[', ctrl: true, action: () => handleNavigateHistoryInFocusedPane('back') },
     { key: ']', ctrl: true, action: () => handleNavigateHistoryInFocusedPane('forward') },
+    // change active message (in any possible panel)
+    { key: ShortcutKey.Up, ctrl: true, action: () => handleMoveFocus(-1) },
+    { key: ShortcutKey.Down, ctrl: true, action: () => handleMoveFocus(1) },
+    { key: ShortcutKey.Up, ctrl: true, shift: true, action: () => handleMoveFocus(-1, true) },
+    { key: ShortcutKey.Down, ctrl: true, shift: true, action: () => handleMoveFocus(1, true) },
     // open the dropdowns
     { key: 'l', ctrl: true, action: () => llmDropdownRef.current?.openListbox() /*, description: 'Open Models Dropdown'*/ },
     { key: 'p', ctrl: true, action: () => personaDropdownRef.current?.openListbox() /*, description: 'Open Persona Dropdown'*/ },
     // focused conversation llm
     { key: 'o', ctrl: true, shift: true, action: handleOpenChatLlmOptions },
-  ], [focusedPaneConversationId, handleConversationReset, handleConversationNewInFocusedPane, handleDeleteConversations, handleConversationsImportFormFilePicker, handleFileSaveConversation, handleMessageBeamLastInFocusedPane, handleMessageRegenerateLastInFocusedPane, handleNavigateHistoryInFocusedPane, handleOpenChatLlmOptions, isFocusedChatEmpty]));
+  ], [focusedPaneConversationId, handleConversationNewInFocusedPane, handleConversationReset, handleConversationsImportFormFilePicker, handleDeleteConversations, handleFileSaveConversation, handleMessageBeamLastInFocusedPane, handleMessageRegenerateLastInFocusedPane, handleMoveFocus, handleNavigateHistoryInFocusedPane, handleOpenChatLlmOptions, isFocusedChatEmpty]));
 
 
   return <>
@@ -499,7 +552,7 @@ export function AppChat() {
     <OptimaToolbarIn>{focusedBarContent}</OptimaToolbarIn>
 
     <PanelGroup
-      direction={isMobile ? 'vertical' : 'horizontal'}
+      direction={(isMobile || isTallScreen) ? 'vertical' : 'horizontal'}
       id='app-chat-panels'
     >
 

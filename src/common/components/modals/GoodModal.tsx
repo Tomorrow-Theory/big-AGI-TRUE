@@ -1,7 +1,16 @@
 import * as React from 'react';
 
-import { Box, Button, Divider, Modal, ModalClose, ModalDialog, ModalOverflow, Typography } from '@mui/joy';
-import { SxProps } from '@mui/joy/styles/types';
+import type { SxProps } from '@mui/joy/styles/types';
+import { Box, Button, ColorPaletteProp, Divider, Modal, ModalClose, ModalDialog, ModalOverflow, Typography } from '@mui/joy';
+
+
+const noBackdropSlotProps = {
+  backdrop: {
+    sx: {
+      backdropFilter: 'none',
+    },
+  },
+};
 
 
 /**
@@ -13,7 +22,10 @@ export function GoodModal(props: {
   strongerTitle?: boolean,
   noTitleBar?: boolean,
   dividers?: boolean,
+  themedColor?: ColorPaletteProp,
+  closeText?: string, // defaults to 'Close'
   animateEnter?: boolean,
+  unfilterBackdrop?: boolean, // this should be left to the theme, but we're gonna use it for the models
   open: boolean,
   onClose?: () => void,
   hideBottomClose?: boolean,
@@ -22,28 +34,42 @@ export function GoodModal(props: {
   children: React.ReactNode,
 }) {
   const showBottomClose = !!props.onClose && props.hideBottomClose !== true;
+
+  const dialogSx: SxProps = React.useMemo(() => ({
+    borderRadius: 'xl',
+    boxShadow: props.themedColor ? 'none' : undefined,
+    minWidth: { xs: 360, sm: 500, md: 600, lg: 700 },
+    maxWidth: 700,
+    display: 'grid',
+    gap: 'var(--Card-padding)',
+    ...props.sx,
+  }), [props.sx, props.themedColor]);
+
+  const backdropSx = React.useMemo(() => {
+    return props.themedColor ? {
+      backdrop: {
+        sx: {
+          backgroundColor: `rgba(var(--joy-palette-${props.themedColor}-darkChannel) / 0.3)`,
+          backdropFilter: props.unfilterBackdrop ? 'none' : 'blur(32px)',
+        },
+      },
+    } : props.unfilterBackdrop ? noBackdropSlotProps : undefined;
+  }, [props.themedColor, props.unfilterBackdrop]);
+
   return (
     <Modal
       open={props.open}
       onClose={props.onClose}
-      // slotProps={{
-      //   backdrop: {
-      //     sx: {
-      //       animation: `${cssBackgroundFadeIn} 0.2s ease-in-out`,
-      //       backdropFilter: 'blur(6px)',
-      //     },
-      //   },
-      // }}
+      slotProps={backdropSx}
     >
       <ModalOverflow sx={{ p: 1 }}>
         <ModalDialog
+          color={props.themedColor}
+          variant={props.themedColor ? 'soft' : undefined}
+          invertedColors={props.themedColor ? true : undefined}
           className={props.animateEnter ? 'agi-animate-enter' : ''}
-          sx={{
-            minWidth: { xs: 360, sm: 500, md: 600, lg: 700 },
-            maxWidth: 700,
-            display: 'grid', gap: 'var(--Card-padding)',
-            ...props.sx,
-          }}>
+          sx={dialogSx}
+        >
 
           {!props.noTitleBar && <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Typography component='h1' level={props.strongerTitle !== true ? 'title-md' : 'title-lg'} startDecorator={props.titleStartDecorator}>
@@ -58,12 +84,12 @@ export function GoodModal(props: {
           {props.children}
           {/*</Box>*/}
 
-          {props.dividers === true && <Divider />}
+          {props.dividers === true && (!!props.startButton || showBottomClose) && <Divider />}
 
           {(!!props.startButton || showBottomClose) && <Box sx={{ mt: 'auto', display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'space-between' }}>
             {props.startButton}
             {showBottomClose && <Button aria-label='Close Dialog' variant='solid' color='neutral' onClick={props.onClose} sx={{ ml: 'auto', minWidth: 100 }}>
-              Close
+              {props.closeText || 'Close'}
             </Button>}
           </Box>}
 

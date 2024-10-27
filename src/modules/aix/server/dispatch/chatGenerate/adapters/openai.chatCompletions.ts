@@ -1,6 +1,6 @@
 import type { OpenAIDialects } from '~/modules/llms/server/openai/openai.router';
 
-import { AixAPI_Model, AixAPIChatGenerate_Request, AixMessages_ChatMessage, AixMessages_SystemMessage, AixParts_MetaInReferenceToPart, AixTools_ToolDefinition, AixTools_ToolsPolicy } from '../../../api/aix.wiretypes';
+import type { AixAPI_Model, AixAPIChatGenerate_Request, AixMessages_ChatMessage, AixMessages_SystemMessage, AixParts_MetaInReferenceToPart, AixTools_ToolDefinition, AixTools_ToolsPolicy } from '../../../api/aix.wiretypes';
 import { OpenAIWire_API_Chat_Completions, OpenAIWire_ContentParts, OpenAIWire_Messages } from '../../wiretypes/openai.wiretypes';
 
 
@@ -87,8 +87,10 @@ export function aixToOpenAIChatCompletions(openAIDialect: OpenAIDialects, model:
 
   // Preemptive error detection with server-side payload validation before sending it upstream
   const validated = OpenAIWire_API_Chat_Completions.Request_schema.safeParse(payload);
-  if (!validated.success)
-    throw new Error(`Invalid message sequence for OpenAI models: ${validated.error.errors?.[0]?.message || validated.error.message || validated.error}`);
+  if (!validated.success) {
+    console.warn('OpenAI: invalid chatCompletions payload. Error:', validated.error);
+    throw new Error(`Invalid sequence for OpenAI models: ${validated.error.errors?.[0]?.message || validated.error.message || validated.error}.`);
+  }
 
   // if (hotFixUseDeprecatedFunctionCalls)
   //   validated.data = _fixUseDeprecatedFunctionCalls(validated.data);
