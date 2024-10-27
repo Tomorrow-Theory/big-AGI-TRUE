@@ -3,7 +3,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-import { useAppStateStore } from '~/common/state/store-appstate';
+//import { useAppStateStore } from '~/common/state/store-appstate';
 
 
 // update this variable every time you want to broadcast a new version to clients
@@ -27,9 +27,9 @@ export const useAppNewsStateStore = create<NewsState>()(
 
 
 export function shallRedirectToNews() {
-  const { lastSeenNewsVersion } = useAppNewsStateStore.getState();
-  const { usageCount } = useAppStateStore.getState();
-  const isNewsOutdated = (lastSeenNewsVersion || 0) < incrementalNewsVersion;
+  //const { lastSeenNewsVersion } = useAppNewsStateStore.getState();
+  //const { usageCount } = useAppStateStore.getState();
+  //const isNewsOutdated = (lastSeenNewsVersion || 0) < incrementalNewsVersion;
   //return isNewsOutdated && usageCount > 2;
   return false;
 }
