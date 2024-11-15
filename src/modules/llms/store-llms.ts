@@ -330,9 +330,9 @@ export function getKnowledgeMapCutoff(llmId?: DLLMId): string | null {
   return null;
 }
 
-const defaultChatSuffixPreference = ['gpt-3.5-turbo'];
-const defaultFastSuffixPreference = ['gpt-3.5-turbo-0125', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-16k-0613', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-16k', 'gpt-3.5-turbo'];
-const defaultFuncSuffixPreference = ['gpt-3.5-turbo-16k-0613', 'gpt-3.5-turbo-0613'];
+const defaultChatSuffixPreference = ['gpt-4o-2024-05-13'];
+const defaultFastSuffixPreference = ['gpt-4o-2024-05-13'];
+const defaultFuncSuffixPreference = ['gpt-4o-2024-05-13'];
 
 function updateSelectedIds(allLlms: DLLM[], chatLlmId: DLLMId | null, fastLlmId: DLLMId | null, funcLlmId: DLLMId | null): Partial<ModelsData> {
   if (chatLlmId && !allLlms.find(llm => llm.id === chatLlmId)) chatLlmId = null;
