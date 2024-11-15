@@ -105,11 +105,11 @@ export const useModelsStore = create<LlmsStore>()(
       _source: null,
       llms: [
         {
-          "id": "openai-gpt-3.5-turbo-0125",
-          "label": "GPT-3.5",
+          "id": "gpt-4o-2024-05-13",
+          "label": "GPT-4o (2024-05-13)",
           "created": 1706048358,
           "updated": 1706048358,
-          "description": "The latest GPT-3.5 Turbo model with higher accuracy at responding in requested formats and a fix for a bug which caused a text encoding issue for non-English language function calls.",
+          "description": "The latest GPT-4o model with higher accuracy at responding in requested formats and a fix for a bug which caused a text encoding issue for non-English language function calls.",
           "tags": [],
           "contextTokens": 16385,
           "maxOutputTokens": 4096,
@@ -117,7 +117,7 @@ export const useModelsStore = create<LlmsStore>()(
           "isFree": false,
           "sId": "openai",
           "options": {
-            "llmRef": "gpt-3.5-turbo-0125",
+            "llmRef": "gpt-4o-2024-05-13",
             "llmTemperature": 0.5,
             "llmResponseTokens": null
           },
