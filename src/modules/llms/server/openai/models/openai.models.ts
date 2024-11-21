@@ -1172,6 +1172,66 @@ export const _knownOpenAIChatModels = llmsDefineModels<_OpenAIModelDef>()([
     chatPrice: { input: 10, output: 30 },
     benchmark: { cbaElo: 1324 }, // gpt-4-turbo-2024-04-09
   },
+
+  // o1-preview
+  {
+    idPrefix: 'o1-preview',
+    label: 'o1 Preview',
+    description: 'Points to the most recent snapshot of the o1 model: o1-preview-2024-09-12',
+    symLink: 'o1-preview-2024-09-12',
+    hidden: true,
+    // copied from symlinked
+    contextWindow: 128000,
+    maxCompletionTokens: 32768,
+    trainingDataCutoff: 'Oct 2023',
+    interfaces: [LLM_IF_OAI_Chat, LLM_IF_SPECIAL_OAI_O1Preview, LLM_IF_OAI_PromptCaching],
+    chatPrice: { input: 15, cache: { cType: 'oai-ac', read: 7.50 }, output: 60 },
+    benchmark: { cbaElo: 13 },
+    isPreview: true,
+  },
+  {
+    idPrefix: 'o1-preview-2024-09-12',
+    label: 'o1 Preview (2024-09-12) ⏱️',
+    description: 'This model takes longer to run and does not support streaming.\n\nNew reasoning model for complex tasks that require broad general knowledge.',
+    contextWindow: 128000,
+    maxCompletionTokens: 32768,
+    trainingDataCutoff: 'Oct 2023',
+    interfaces: [LLM_IF_OAI_Chat, LLM_IF_SPECIAL_OAI_O1Preview, LLM_IF_OAI_PromptCaching],
+    chatPrice: { input: 15, cache: { cType: 'oai-ac', read: 7.50 }, output: 60 },
+    benchmark: { cbaElo: 13 },
+    isPreview: true,
+  },
+
+  // o1-mini
+  {
+    idPrefix: 'o1-mini',
+    label: 'o1 Mini',
+    description: 'Points to the most recent o1-mini snapshot: o1-mini-2024-09-12',
+    symLink: 'o1-mini-2024-09-12',
+    hidden: true,
+    // copied from symlinked
+    contextWindow: 128000,
+    maxCompletionTokens: 65536,
+    trainingDataCutoff: 'Oct 2023',
+    interfaces: [LLM_IF_OAI_Chat, LLM_IF_SPECIAL_OAI_O1Preview, LLM_IF_OAI_PromptCaching],
+    chatPrice: { input: 3, cache: { cType: 'oai-ac', read: 1.5 }, output: 12 },
+    benchmark: { cbaElo: 13 },
+    isPreview: true,
+  },
+  {
+    idPrefix: 'o1-mini-2024-09-12',
+    label: 'o1 Mini (2024-09-12) ⏱️',
+    description: 'This model feels slow because it does not support streaming.\n\nFast, cost-efficient reasoning model tailored to coding, math, and science use cases.',
+    contextWindow: 128000,
+    maxCompletionTokens: 65536,
+    trainingDataCutoff: 'Oct 2023',
+    interfaces: [LLM_IF_OAI_Chat, LLM_IF_SPECIAL_OAI_O1Preview, LLM_IF_OAI_PromptCaching],
+    chatPrice: { input: 3, cache: { cType: 'oai-ac', read: 1.5 }, output: 12 },
+    benchmark: { cbaElo: 13 },
+    isPreview: true,
+  },
+
+  // GPT-4 Turbo with Vision -> 2024-04-09
   {
     idPrefix: 'gpt-4-turbo',
     label: 'GPT-4 Turbo',
