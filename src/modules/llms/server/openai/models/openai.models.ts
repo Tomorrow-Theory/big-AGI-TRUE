@@ -128,7 +128,7 @@ export const _knownOpenAIChatModels: ManualMappings = [
     trainingDataCutoff: 'Oct 2023',
     interfaces: [LLM_IF_OAI_Chat, LLM_IF_SPECIAL_OAI_O1Preview, LLM_IF_OAI_PromptCaching],
     chatPrice: { input: 15, cache: { cType: 'oai-ac', read: 7.50 }, output: 60 },
-    benchmark: { cbaElo: 1339 },
+    benchmark: { cbaElo: 13 },
     isPreview: true,
   },
   {
@@ -140,7 +140,7 @@ export const _knownOpenAIChatModels: ManualMappings = [
     trainingDataCutoff: 'Oct 2023',
     interfaces: [LLM_IF_OAI_Chat, LLM_IF_SPECIAL_OAI_O1Preview, LLM_IF_OAI_PromptCaching],
     chatPrice: { input: 15, cache: { cType: 'oai-ac', read: 7.50 }, output: 60 },
-    benchmark: { cbaElo: 1339 },
+    benchmark: { cbaElo: 13 },
     isPreview: true,
   },
 
@@ -157,7 +157,7 @@ export const _knownOpenAIChatModels: ManualMappings = [
     trainingDataCutoff: 'Oct 2023',
     interfaces: [LLM_IF_OAI_Chat, LLM_IF_SPECIAL_OAI_O1Preview, LLM_IF_OAI_PromptCaching],
     chatPrice: { input: 3, cache: { cType: 'oai-ac', read: 1.5 }, output: 12 },
-    benchmark: { cbaElo: 1314 },
+    benchmark: { cbaElo: 13 },
     isPreview: true,
   },
   {
@@ -169,7 +169,7 @@ export const _knownOpenAIChatModels: ManualMappings = [
     trainingDataCutoff: 'Oct 2023',
     interfaces: [LLM_IF_OAI_Chat, LLM_IF_SPECIAL_OAI_O1Preview, LLM_IF_OAI_PromptCaching],
     chatPrice: { input: 3, cache: { cType: 'oai-ac', read: 1.5 }, output: 12 },
-    benchmark: { cbaElo: 1314 },
+    benchmark: { cbaElo: 13 },
     isPreview: true,
   },
 
