@@ -153,7 +153,7 @@ export namespace AixWire_Parts {
   const _FunctionCallInvocation_schema = z.object({
     type: z.literal('function_call'),
     name: z.string(),
-    args: z.string().nullable(),
+    args: z.string(), //.nullable(), // 2024-11-03: disabled .nullable(), as we'll use '' for no args (which some APIs weirdly don't support so we'll mock downstream as '{}')
     // _description: z.string().optional(),
     // _args_schema: z.object({}).optional(),
   });
@@ -269,7 +269,7 @@ export namespace AixWire_Content {
 
 export namespace AixWire_Tooling {
 
-  /// Function Call Tool
+  /// Function Call Tool Definition
 
   const _FunctionCall_schema = z.object({
     /**
@@ -286,6 +286,7 @@ export namespace AixWire_Tooling {
     description: z.string(),
     /**
      *  A JSON Schema object defining the expected parameters for the function call.
+     *  - Optional. If not provided, it means the Function Tool does not require any input and will be invoked without any arguments.
      *  (OpenAI + Google: parameters, Anthropic: input_schema)
      */
     input_schema: z.object({
@@ -374,7 +375,7 @@ export namespace AixWire_API {
   export const Model_schema = z.object({
     id: z.string(),
     temperature: z.number().min(0).max(2).optional(),
-    maxTokens: z.number().min(1).max(1000000).optional(),
+    maxTokens: z.number().min(1).optional(),
   });
 
   /// Context

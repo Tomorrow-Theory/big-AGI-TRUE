@@ -36,7 +36,8 @@ type RequestConfig<TJsonBody extends object | undefined> = {
 } & (
   | { method?: 'GET' /* in case of GET, the method is optional, and no body */ }
   | { method: 'POST'; body: TJsonBody }
-  | { method: 'DELETE'; body: TJsonBody }
+  | { method: 'PUT'; body: TJsonBody }      // [fred-sync] added PUT
+  | { method: 'DELETE'; body?: TJsonBody }  // [Ollama] Violates the spec and has a body on DELETE requests
   );
 
 
@@ -88,7 +89,7 @@ async function _fetchFromTRPC<TJsonBody extends object | undefined, TOut>(
       message: (throwWithoutName ? '' : `[${moduleName} network issue]: `)
         + (safeErrorString(error) || 'unknown fetch error')
         + (errorCause
-          ? ` - ${errorCause?.toString()}`
+          ? ` - ${safeErrorString(errorCause)}`
           : '')
         + ((errorCause && (errorCause as any)?.code === 'ECONNREFUSED')
           ? ` - is "${url}" accessible by the server?`

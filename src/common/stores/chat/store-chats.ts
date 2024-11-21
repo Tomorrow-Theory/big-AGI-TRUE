@@ -29,12 +29,13 @@ interface ChatState {
 export interface ChatActions {
 
   // CRUD conversations
-  prependNewConversation: (personaId: SystemPurposeId | undefined) => DConversationId;
+  prependNewConversation: (personaId: SystemPurposeId | undefined, isIncognito: boolean) => DConversationId;
   importConversation: (c: DConversation, preventClash: boolean) => DConversationId;
   branchConversation: (cId: DConversationId, mId: DMessageId | null) => DConversationId | null;
   deleteConversations: (cIds: DConversationId[], newConversationPersonaId?: SystemPurposeId) => DConversationId;
 
   // within a conversation
+  isIncognito: (cId: DConversationId) => boolean | undefined;
   setAbortController: (cId: DConversationId, _abortController: AbortController | null, debugScope: string) => void;
   abortConversationTemp: (cId: DConversationId) => void;
   historyReplace: (cId: DConversationId, messages: DMessage[]) => void;
@@ -67,8 +68,9 @@ export const useChatStore = create<ConversationsStore>()(/*devtools(*/
       // default state
       conversations: defaultConversations,
 
-      prependNewConversation: (personaId: SystemPurposeId | undefined): DConversationId => {
+      prependNewConversation: (personaId: SystemPurposeId | undefined, isIncognito: boolean): DConversationId => {
         const newConversation = createDConversation(personaId);
+        if (isIncognito) newConversation._isIncognito = true;
 
         _set(state => ({
           conversations: [newConversation, ...state.conversations],
@@ -173,6 +175,9 @@ export const useChatStore = create<ConversationsStore>()(/*devtools(*/
               : conversation,
           ),
         })),
+
+      isIncognito: (conversationId: DConversationId): boolean | undefined =>
+        _get().conversations.find(_c => _c.id === conversationId)?._isIncognito ?? undefined,
 
       setAbortController: (conversationId: DConversationId, _nextController: AbortController | null, debugScope: string) =>
         _get()._editConversation(conversationId, ({ _abortController: _currentController }) => {
@@ -420,11 +425,18 @@ export const useChatStore = create<ConversationsStore>()(/*devtools(*/
       // Pre-Saving: remove transient properties
       partialize: (state) => ({
         ...state,
-        conversations: state.conversations.map((conversation: DConversation) => {
-          // remove the converation AbortController (current data structure version)
-          const { _abortController, ...rest } = conversation;
-          return rest;
-        }),
+        conversations: state.conversations
+          .filter(c => {
+            // do not save incognito conversations
+            if (c._isIncognito) return false;
+            // do not save empty conversations, begin saving them when they have content
+            return !(!c.messages?.length && !c.autoTitle && !c.userTitle);
+          })
+          .map((conversation: DConversation) => {
+            // remove the converation AbortController (current data structure version)
+            const { _abortController, ...rest } = conversation;
+            return rest;
+          }),
       }),
 
       // Post-Loading: re-add transient properties and cleanup state

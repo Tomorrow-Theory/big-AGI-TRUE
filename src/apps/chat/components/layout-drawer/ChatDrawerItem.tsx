@@ -11,6 +11,7 @@ import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
 import FolderIcon from '@mui/icons-material/Folder';
 import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
 import TelegramIcon from '@mui/icons-material/Telegram';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 
 import { SystemPurposeId, SystemPurposes } from '../../../../data';
 
@@ -55,6 +56,7 @@ export interface ChatNavigationItemData {
   isActive: boolean;
   isAlsoOpen: string | false;
   isEmpty: boolean;
+  isIncognito: boolean;
   title: string;
   userSymbol: string | undefined;
   userFlagsSummary: string | undefined;
@@ -97,6 +99,7 @@ function ChatDrawerItem(props: {
     conversationId,
     isActive,
     isAlsoOpen,
+    isIncognito,
     title,
     userSymbol,
     userFlagsSummary,
@@ -205,9 +208,11 @@ function ChatDrawerItem(props: {
   const titleRowComponent = React.useMemo(() => <>
 
     {/* Symbol, if globally enabled */}
-    {props.showSymbols && (
+    {(props.showSymbols || isIncognito) && (
       <ListItemDecorator>
-        {(beingGenerated && props.showSymbols === 'gif') ? (
+        {isIncognito ? (
+          <VisibilityOffIcon sx={{ fontSize: 'xl' }} />
+        ) : (beingGenerated && props.showSymbols === 'gif') ? (
           <Avatar
             alt='chat activity'
             variant='plain'
@@ -281,7 +286,7 @@ function ChatDrawerItem(props: {
       </Box>
     ) : null}
 
-  </>, [beingGenerated, containsDocAttachments, containsImageAssets, handleTitleEditBegin, handleTitleEditCancel, handleTitleEditChange, isActive, isEditingTitle, isNew, personaImageURI, personaSymbol, props.showSymbols, searchFrequency, title, userFlagsSummary]);
+  </>, [beingGenerated, containsDocAttachments, containsImageAssets, handleTitleEditBegin, handleTitleEditCancel, handleTitleEditChange, isActive, isEditingTitle, isIncognito, isNew, personaImageURI, personaSymbol, props.showSymbols, searchFrequency, title, userFlagsSummary]);
 
   const progressBarFixedComponent = React.useMemo(() =>
     progress > 0 && (
@@ -319,6 +324,9 @@ function ChatDrawerItem(props: {
         '&:hover > button': {
           opacity: 1, // fade in buttons when hovering, but by default wash them out a bit
         },
+        ...(isIncognito && {
+          filter: 'brightness(0.5) contrast(0.5)',
+        }),
       }}
     >
 
@@ -429,6 +437,10 @@ function ChatDrawerItem(props: {
         sx={{
           border: 'none', // there's a default border of 1px and invisible.. hmm
           position: 'relative', // for the progress bar
+          borderRadius: 'sm', // OPTIMA_NAV_RADIUS, // sync with the optima radius, because they need to match
+          ...isIncognito && {
+            filter: 'contrast(0)',
+          },
         }}
       >
 

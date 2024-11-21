@@ -10,7 +10,7 @@ import { FlattenerModal } from '~/modules/aifn/flatten/FlattenerModal';
 import { TradeConfig, TradeModal } from '~/modules/trade/TradeModal';
 import { downloadSingleChat, importConversationsFromFilesAtRest, openConversationsAtRestPicker } from '~/modules/trade/trade.client';
 import { imaginePromptFromTextOrThrow } from '~/modules/aifn/imagine/imaginePromptFromText';
-import { speakText } from '~/modules/elevenlabs/elevenlabs.client';
+import { elevenLabsSpeakText } from '~/modules/elevenlabs/elevenlabs.client';
 import { useAreBeamsOpen } from '~/modules/beam/store-beam.hooks';
 import { useCapabilityTextToImage } from '~/modules/t2i/t2i.client';
 
@@ -202,7 +202,7 @@ export function AppChat() {
 
   // [effect] Handle the initial conversation intent
   React.useEffect(() => {
-    if (Release.DevBuild && intent.initialConversationId === 'null')
+    if (Release.IsNodeDevBuild && intent.initialConversationId === 'null')
       return openConversationInFocusedPane(null! /* for debugging purporse */);
     intent.initialConversationId && openConversationInFocusedPane(intent.initialConversationId);
   }, [intent.initialConversationId, openConversationInFocusedPane]);
@@ -313,18 +313,18 @@ export function AppChat() {
   }, [handleExecuteAndOutcome]);
 
   const handleTextSpeak = React.useCallback(async (text: string): Promise<void> => {
-    await speakText(text);
+    await elevenLabsSpeakText(text, undefined, true, true);
   }, []);
 
 
   // Chat actions
 
-  const handleConversationNewInFocusedPane = React.useCallback((forceNoRecycle?: boolean) => {
+  const handleConversationNewInFocusedPane = React.useCallback((forceNoRecycle: boolean, isIncognito: boolean) => {
 
     // create conversation (or recycle the existing top-of-stack empty conversation)
-    const conversationId = (recycleNewConversationId && !forceNoRecycle)
+    const conversationId = (recycleNewConversationId && !forceNoRecycle && !isIncognito)
       ? recycleNewConversationId
-      : prependNewConversation(getConversationSystemPurposeId(focusedPaneConversationId) ?? undefined);
+      : prependNewConversation(getConversationSystemPurposeId(focusedPaneConversationId) ?? undefined, isIncognito);
 
     // switch the focused pane to the new conversation
     handleOpenConversationInFocusedPane(conversationId);
@@ -492,10 +492,15 @@ export function AppChat() {
   const handleMoveFocus = React.useCallback((direction: number, wholeList?: boolean) => {
     // find the parent list
     let messageListElement: HTMLElement | null;
+    let withinBeam = false;
     const activeElement = document.activeElement as HTMLElement;
-    if (activeElement)
-      messageListElement = activeElement.closest('[role=chat-messages-list]') as HTMLElement;
-    else
+    if (activeElement) {
+      messageListElement = document.querySelector('[role=beam-list]') as HTMLElement;
+      if (!messageListElement)
+        messageListElement = activeElement.closest('[role=chat-messages-list]') as HTMLElement;
+      else
+        withinBeam = true;
+    } else
       messageListElement = document.querySelector('[role=chat-messages-list]') as HTMLElement;
     if (!messageListElement) return;
 
@@ -505,7 +510,7 @@ export function AppChat() {
     const isAtBottom = Math.abs(scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.clientHeight) < 1;
 
     // determine the current message and next index
-    const messageElements = Array.from(messageListElement.querySelectorAll('[role=chat-message]')) as HTMLElement[];
+    const messageElements = Array.from(messageListElement.querySelectorAll(withinBeam ? '[role=beam-card]' : '[role=chat-message]')) as HTMLElement[];
     const currentIndex = messageElements.findIndex(el => el.contains(activeElement));
 
     // if going down and we're at/past the last message, scroll to bottom
@@ -529,7 +534,7 @@ export function AppChat() {
     { key: 'b', ctrl: true, shift: true, disabled: isFocusedChatEmpty, action: handleMessageBeamLastInFocusedPane, description: 'Beam Edit' },
     { key: 'o', ctrl: true, action: handleConversationsImportFormFilePicker },
     { key: 's', ctrl: true, action: () => handleFileSaveConversation(focusedPaneConversationId) },
-    { key: 'n', ctrl: true, shift: true, action: handleConversationNewInFocusedPane },
+    { key: 'n', ctrl: true, shift: true, action: () => handleConversationNewInFocusedPane(false, false) },
     { key: 'x', ctrl: true, shift: true, action: () => isFocusedChatEmpty || (focusedPaneConversationId && handleConversationReset(focusedPaneConversationId)) },
     { key: 'd', ctrl: true, shift: true, action: () => focusedPaneConversationId && handleDeleteConversations([focusedPaneConversationId], false) },
     { key: '[', ctrl: true, action: () => handleNavigateHistoryInFocusedPane('back') },
@@ -560,6 +565,7 @@ export function AppChat() {
         const _paneIsFocused = idx === focusedPaneIndex;
         const _paneConversationId = pane.conversationId;
         const _paneChatHandler = paneHandlers[idx] ?? null;
+        const _paneIsIncognito = _paneChatHandler?.isIncognito() ?? false;
         const _paneBeamStoreApi = paneBeamStores[idx] ?? null;
         const _paneBeamIsOpen = !!beamsOpens?.[idx] && !!_paneBeamStoreApi;
         const _panesCount = chatPanes.length;
@@ -603,6 +609,9 @@ export function AppChat() {
                 // it was optional before: https://github.com/bvaughn/react-resizable-panels/issues/241
                 pointerEvents: 'auto',
               }),
+              ...((_paneIsIncognito && {
+                backgroundColor: theme.palette.background.level3,
+              })),
             }}
           >
 
