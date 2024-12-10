@@ -227,7 +227,7 @@ function getTextToImageProviders(llmsModelServices: T2ILlmsModelServices[], hasP
   }
 
   // add Prodia provider
-  const hasProdiaServer = getBackendCapabilities().hasImagingProdia;
+  const hasProdiaServer =false;
   providers.push({
     providerId: 'prodia',
     label: 'Prodia',
