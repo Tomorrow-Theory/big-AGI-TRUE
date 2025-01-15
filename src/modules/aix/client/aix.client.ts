@@ -35,7 +35,7 @@ export function aixCreateModelFromLLMOptions(
 ): AixAPI_Model {
 
   // destructure input with the overrides
-  const { llmRef, llmTemperature, llmResponseTokens, llmTopP, llmVndOaiReasoningEffort } = {
+  const { llmRef, llmTemperature, llmResponseTokens, llmTopP, llmVndOaiReasoningEffort, llmVndOaiRestoreMarkdown } = {
     ...llmOptions,
     ...llmOptionsOverride,
   };
@@ -54,6 +54,7 @@ export function aixCreateModelFromLLMOptions(
     ...(llmResponseTokens /* null: similar to undefined, will omit the value */ ? { maxTokens: llmResponseTokens } : {}),
     ...(llmTopP !== undefined ? { topP: llmTopP } : {}),
     ...(llmVndOaiReasoningEffort ? { vndOaiReasoningEffort: llmVndOaiReasoningEffort } : {}),
+    ...(llmVndOaiRestoreMarkdown ? { vndOaiRestoreMarkdown: llmVndOaiRestoreMarkdown } : {}),
   };
 }
 
@@ -541,7 +542,8 @@ async function _aixChatGenerateContent_LL(
     fragments: [],
     /* rest start as undefined (missing in reality) */
   };
-  const contentReassembler = new ContentReassembler(accumulator_LL);
+  const debugDispatchRequestbody = getLabsDevMode() && aixContext.name === 'conversation'; // [DEV] Debugging the conversation request (only)
+  const contentReassembler = new ContentReassembler(accumulator_LL, debugDispatchRequestbody);
 
   // Initialize throttler if throttling is enabled
   const throttler = (onReassemblyUpdate && throttleParallelThreads)
@@ -557,7 +559,7 @@ async function _aixChatGenerateContent_LL(
       chatGenerate: aixChatGenerate,
       context: aixContext,
       streaming: getLabsDevNoStreaming() ? false : aixStreaming, // [DEV] disable streaming if set in the UX (testing)
-      ...(getLabsDevMode() && {
+      ...(debugDispatchRequestbody && {
         connectionOptions: {
           debugDispatchRequestbody: true, // [DEV] Debugging the request without requiring a server restart
         },

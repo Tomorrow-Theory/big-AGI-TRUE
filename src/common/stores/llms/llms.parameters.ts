@@ -68,7 +68,13 @@ export const DModelParameterRegistry = {
     type: 'enum' as const,
     description: 'Constrains effort on reasoning for OpenAI reasoning models',
     values: ['low', 'medium', 'high'] as const,
-    requiredFallback: 'med',
+    requiredFallback: 'medium',
+  } as const,
+
+  llmVndOaiRestoreMarkdown: {
+    label: 'Restore Markdown',
+    type: 'boolean' as const,
+    description: 'Restore Markdown formatting in the output',
   } as const,
 
 } as const;

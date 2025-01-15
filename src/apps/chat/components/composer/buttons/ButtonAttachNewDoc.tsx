@@ -1,31 +1,31 @@
 import * as React from 'react';
 
 import { Box, Button, IconButton, Tooltip } from '@mui/joy';
-import ContentPasteGoIcon from '@mui/icons-material/ContentPasteGo';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
 
-import { KeyStroke } from '~/common/components/KeyStroke';
 import { buttonAttachSx } from '~/common/components/ButtonAttachFiles';
 
 
-export const ButtonAttachClipboardMemo = React.memo(ButtonAttachClipboard);
+export const ButtonAttachNewMemo = React.memo(ButtonAttachNew);
 
-function ButtonAttachClipboard(props: {
+function ButtonAttachNew(props: {
   isMobile?: boolean,
   disabled?: boolean,
   fullWidth?: boolean,
   noToolTip?: boolean,
-  onAttachClipboard: () => void,
+  onAttachNew: () => void,
 }) {
   return props.isMobile ? (
-    <IconButton disabled={props.disabled} onClick={props.onAttachClipboard}>
-      <ContentPasteGoIcon />
+    <IconButton disabled={props.disabled} onClick={props.onAttachNew}>
+      <AddRoundedIcon />
     </IconButton>
   ) : (
     <Tooltip arrow disableInteractive placement='top-start' title={props.noToolTip ? null : (
       <Box sx={buttonAttachSx.tooltip}>
-        <b>Attach clipboard 📚</b><br />
-        Auto-converts to the best types<br />
-        <KeyStroke combo='Ctrl + Shift + V' sx={{ mt: 1, mb: 0.5 }} />
+        <b>Create new document</b><br />
+        Edit your own empty document
+        {/*<br />*/}
+        {/*<KeyStroke combo='Ctrl + Alt + N' sx={{ mt: 1, mb: 0.5 }} />*/}
       </Box>
     )}>
       <Button
@@ -33,11 +33,11 @@ function ButtonAttachClipboard(props: {
         color='neutral'
         disabled={props.disabled}
         fullWidth={props.fullWidth}
-        startDecorator={<ContentPasteGoIcon />}
-        onClick={props.onAttachClipboard}
+        startDecorator={<AddRoundedIcon />}
+        onClick={props.onAttachNew}
         sx={buttonAttachSx.desktop}
       >
-        Paste
+        New
       </Button>
     </Tooltip>
   );
