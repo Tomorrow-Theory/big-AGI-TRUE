@@ -134,7 +134,7 @@ export function MobileNavItems(props: { currentApp?: NavItemApp }) {
           sx={_styles.button}
         >
           News
-        </Button>
+        </Button>*/}
 
         {/* HARDCODED: Models */}
         <Button
@@ -147,16 +147,13 @@ export function MobileNavItems(props: { currentApp?: NavItemApp }) {
           Models
         </Button>
 
-        {/* External links (e.g. Discord) */}
-        {navItems.links.slice(0, MAX_LINKS).map((link) => (
-          <BringTheLove
-            key={link.name}
-            text={link.name}
-            icon={link.icon}
-            link={link.href}
-            sx={_styles.button}
-          />
-        ))}
+        {/* HARDCODED: Discord 
+        <BringTheLove
+          text={navItems.links[0].name}
+          icon={navItems.links[0].icon}
+          link={navItems.links[0].href}
+          sx={{ color: 'text.primary', px: 0, minWidth: 80 }}
+        />*/}
       </Box>
 
     </Sheet>
