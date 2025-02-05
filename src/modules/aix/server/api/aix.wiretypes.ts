@@ -379,6 +379,7 @@ export namespace AixWire_API {
       .nullable(), // [Deepseek, 2025-01-20] temperature unsupported, so we use 'null' to omit it from the request
     maxTokens: z.number().min(1).optional(),
     topP: z.number().min(0).max(1).optional(),
+    vndGeminiShowThoughts: z.boolean().optional(),
     vndOaiReasoningEffort: z.enum(['low', 'medium', 'high']).optional(),
     vndOaiRestoreMarkdown: z.boolean().optional(),
   });
@@ -547,7 +548,7 @@ export namespace AixWire_Particles {
     | { t: string }; // special: incremental text, but with a more optimized/succinct representation compared to { p: 't_', i_t: string }
 
   export type PartParticleOp =
-    | { p: 'tr_', _t: string } // reasoning text, incremental
+    | { p: 'tr_', _t: string, weak?: 'tag' } // reasoning text, incremental; could be a 'weak' detection, e.g. heuristic from '<think>' rather than API-provided
   // | { p: 'ii', mimeType: string, i_b64?: string /* never undefined */ }
   // | { p: '_ii', i_b64: string }
   // | { p: 'di', type: string, ref: string, l1Title: string, i_text?: string /* never undefined */ }

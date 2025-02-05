@@ -41,6 +41,7 @@ export function LLMParametersEditor(props: {
   // derived state
   const llmTemperature: number | null = allParameters.llmTemperature === undefined ? FALLBACK_LLM_PARAM_TEMPERATURE : allParameters.llmTemperature;
   const llmResponseTokens = allParameters.llmResponseTokens ?? FALLBACK_LLM_PARAM_RESPONSE_TOKENS;
+  const llmVndGeminiShowThoughts = allParameters.llmVndGeminiShowThoughts;
   const llmVndOaiReasoningEffort = allParameters.llmVndOaiReasoningEffort;
   const llmVndOaiRestoreMarkdown = !!allParameters.llmVndOaiRestoreMarkdown;
   const tempAboveOne = llmTemperature !== null && llmTemperature > 1;
@@ -60,6 +61,9 @@ export function LLMParametersEditor(props: {
     setOverheat(on => !on);
   }, [onChangeParameter, overheat, tempAboveOne]);
 
+
+  // find the gemini show thoughts parameter spec
+  const paramSpecGeminiShowThoughts = parameterSpecs?.find(p => p.paramId === 'llmVndGeminiShowThoughts') as DModelParameterSpec<'llmVndGeminiShowThoughts'> | undefined;
 
   // find the reasoning effort parameter spec
   // NOTE: optimization: this controls both the 'reasoning effort' and 'restore markdown' UI settings
@@ -104,6 +108,15 @@ export function LLMParametersEditor(props: {
       <InlineError error='Max Output Tokens: Token computations are disabled because this model does not declare the context window size.' />
     )}
 
+    {paramSpecGeminiShowThoughts && (
+      <FormSwitchControl
+        title='Show Chain of Thought'
+        description={`Displays Gemini\'s reasoning process`}
+        checked={!!llmVndGeminiShowThoughts}
+        onChange={checked => onChangeParameter({ llmVndGeminiShowThoughts: checked })}
+      />
+    )}
+
     {paramSpecReasoningEffort && (
       <FormSelectControl
         title='Reasoning Effort'
@@ -123,7 +136,7 @@ export function LLMParametersEditor(props: {
       <FormSwitchControl
         title='Restore Markdown'
         description='Enable markdown formatting'
-        tooltip='o1 models in the API will avoid generating responses with markdown formatting. This option signals to the model to re-enable markdown formatting in the respons'
+        tooltip='o1 and o3 models in the API will avoid generating responses with markdown formatting. This option signals to the model to re-enable markdown formatting in the respons'
         checked={llmVndOaiRestoreMarkdown}
         onChange={checked => {
           if (!checked)
