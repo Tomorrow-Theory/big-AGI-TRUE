@@ -41,6 +41,8 @@
     "@trpc/react-query": "11.0.0-rc.730",
     "@trpc/server": "11.0.0-rc.730",
     "@vercel/analytics": "^1.4.1",
+    "@vercel/client": "^15.0.2",
+    "@vercel/node": "^5.1.2",
     "@vercel/speed-insights": "^1.1.0",
     "browser-fs-access": "^0.35.0",
     "cheerio": "^1.0.0",
