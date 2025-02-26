@@ -75,7 +75,7 @@ export function aixToOpenAIChatCompletions(openAIDialect: OpenAIDialects, model:
     tool_choice: chatGenerate.toolsPolicy && _toOpenAIToolChoice(openAIDialect, chatGenerate.toolsPolicy),
     parallel_tool_calls: undefined,
     max_tokens: model.maxTokens !== undefined ? model.maxTokens : undefined,
-    ...(model.temperature !== null ? { temperature: model.temperature !== undefined ? model.temperature : undefined, } : {}),
+    ...(model.temperature !== null ? { temperature: model.temperature !== undefined ? model.temperature : undefined } : {}),
     top_p: undefined,
     n: hotFixOnlySupportN1 ? undefined : 0, // NOTE: we choose to not support this at the API level - most downstram ecosystem supports 1 only, which is the default
     stream: streaming,
@@ -203,8 +203,17 @@ function _fixVndOaiRestoreMarkdown_Inline(payload: TRequest) {
   // This function prepends "Formatting re-enabled" to the first user message, if not already present
   if (payload.messages?.length) {
     const firstMessage = payload.messages[0];
-    if (firstMessage.role === 'developer' && firstMessage.content && !firstMessage.content.split('\n')[0].includes('Formatting re-enabled'))
+    const isDevOrSystem = firstMessage.role === 'developer' || firstMessage.role === 'system';
+
+    // update the text of the developer message
+    if (isDevOrSystem && firstMessage.content && !firstMessage.content.split('\n')[0].includes('Formatting re-enabled')) {
       firstMessage.content = 'Formatting re-enabled\n' + firstMessage.content;
+    }
+    // if the developer message is missing, add it altogether
+    else if (!isDevOrSystem) {
+      // prepend to the first user message
+      payload.messages.unshift({ role: 'developer', content: 'Formatting re-enabled' });
+    }
   }
 
 }
@@ -243,10 +252,11 @@ function _toOpenAIMessages(systemMessage: AixMessages_SystemMessage | null, chat
         break;
 
       case 'meta_cache_control':
-        // ignore this hint - openai doesn't support this yet
+        // ignore this breakpoint hint - Anthropic only
         break;
 
       default:
+        const _exhaustiveCheck: never = part;
         throw new Error(`Unsupported part type in System message: ${(part as any).pt}`);
     }
   });
@@ -307,7 +317,7 @@ function _toOpenAIMessages(systemMessage: AixMessages_SystemMessage | null, chat
               break;
 
             case 'meta_cache_control':
-              // ignore this hint - openai doesn't support this yet
+              // ignore this breakpoint hint - Anthropic only
               break;
 
             case 'meta_in_reference_to':
@@ -318,6 +328,7 @@ function _toOpenAIMessages(systemMessage: AixMessages_SystemMessage | null, chat
               break;
 
             default:
+              const _exhaustiveCheck: never = part;
               throw new Error(`Unsupported part type in User message: ${(part as any).pt}`);
           }
         }
@@ -368,6 +379,7 @@ function _toOpenAIMessages(systemMessage: AixMessages_SystemMessage | null, chat
                   toolCallPart = OpenAIWire_ContentParts.PredictedFunctionCall(part.id, 'execute_code' /* suboptimal */, invocation.code || '');
                   break;
                 default:
+                  const _exhaustiveCheck: never = invocation;
                   throw new Error(`Unsupported tool call type in Model message: ${(part as any).pt}`);
               }
 
@@ -381,11 +393,16 @@ function _toOpenAIMessages(systemMessage: AixMessages_SystemMessage | null, chat
                 chatMessages.push({ role: 'assistant', content: null, tool_calls: [toolCallPart] });
               break;
 
+            case 'ma':
+              // ignore this thinking block - Anthropic only
+              break;
+
             case 'meta_cache_control':
-              // ignore this hint - openai doesn't support this yet
+              // ignore this breakpoint hint - Anthropic only
               break;
 
             default:
+              const _exhaustiveCheck: never = part;
               throw new Error(`Unsupported part type in Model message: ${(part as any).pt}`);
           }
 
@@ -404,7 +421,12 @@ function _toOpenAIMessages(systemMessage: AixMessages_SystemMessage | null, chat
                 throw new Error(`Unsupported tool response type in Tool message: ${(part as any).pt}`);
               break;
 
+            case 'meta_cache_control':
+              // ignore this breakpoint hint - Anthropic only
+              break;
+
             default:
+              const _exhaustiveCheck: never = part;
               throw new Error(`Unsupported part type in Tool message: ${(part as any).pt}`);
           }
         }
