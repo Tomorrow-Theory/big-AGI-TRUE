@@ -92,7 +92,12 @@ export function AdminApiKeyManager() {
       if (result.success) {
         setSuccess(true);
       } else {
-        throw new Error('Erreur lors de la mise à jour des clés API');
+        // Si l'API retourne success: false, on affiche le message d'erreur
+        if (result.message) {
+          setError(result.message);
+        } else {
+          throw new Error('Erreur lors de la mise à jour des clés API');
+        }
       }
     } catch (err) {
       console.error('Error updating API keys:', err);

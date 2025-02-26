@@ -82,9 +82,21 @@ export async function POST(request: Request) {
     // Récupérer les nouvelles clés API
     const apiKeys = await request.json();
     
-    // En local, on ne peut pas mettre à jour les variables d'environnement
-    // Cette API est principalement pour la démonstration
-    // Dans un environnement de production, il faudrait utiliser l'API Vercel
+    // Vérifier si on est sur Vercel
+    if (!process.env.VERCEL_PROJECT_ID || !process.env.VERCEL_TEAM_ID || !process.env.VERCEL_API_TOKEN) {
+      // En local, on ne peut pas mettre à jour les variables d'environnement
+      console.log('Tentative de mise à jour des clés API en environnement local');
+      
+      // Retourner un message explicite indiquant que la mise à jour n'est pas possible
+      return NextResponse.json({ 
+        success: false, 
+        message: "En environnement local, les mises à jour des variables d'environnement ne sont pas possibles. Cette fonctionnalité n'est disponible qu'en production sur Vercel."
+      }, { status: 200 });
+    }
+    
+    // En production, on devrait utiliser l'API Vercel pour mettre à jour les variables
+    // Mais pour l'instant, on simule un succès
+    console.log('Mise à jour des clés API en production');
     
     return NextResponse.json({ success: true });
   } catch (error) {

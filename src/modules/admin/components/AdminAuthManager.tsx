@@ -84,7 +84,12 @@ export function AdminAuthManager() {
       if (result.success) {
         setSuccess(true);
       } else {
-        throw new Error('Erreur lors de la mise à jour des identifiants');
+        // Si l'API retourne success: false, on affiche le message d'erreur
+        if (result.message) {
+          setError(result.message);
+        } else {
+          throw new Error('Erreur lors de la mise à jour des identifiants');
+        }
       }
     } catch (err) {
       console.error('Error updating HTTP Basic Auth:', err);
