@@ -49,6 +49,8 @@
     "diff": "^7.0.0",
     "eventsource-parser": "^3.0.0",
     "idb-keyval": "^6.2.1",
+    "jose": "^6.0.7",
+    "jsonwebtoken": "^9.0.2",
     "mammoth": "^1.9.0",
     "nanoid": "^5.1.2",
     "next": "^15.1.7",
@@ -80,6 +82,7 @@
   },
   "devDependencies": {
     "@types/diff": "^7.0.1",
+    "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^22.13.5",
     "@types/nprogress": "^0.2.3",
     "@types/plantuml-encoder": "^1.4.2",

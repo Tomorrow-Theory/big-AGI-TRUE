@@ -11,6 +11,15 @@ import { NextResponse } from 'next/server';
 
 // noinspection JSUnusedGlobalSymbols
 export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  
+  // Skip authentication for the admin page and admin API routes
+  if (pathname === '/admin' || 
+      pathname.startsWith('/api/edge') || 
+      pathname.startsWith('/api/admin/')) {
+    console.log('Skipping auth for admin route:', pathname);
+    return NextResponse.next();
+  }
 
   // Validate deployment configuration
   if (!process.env.HTTP_BASIC_AUTH_USERNAME || !process.env.HTTP_BASIC_AUTH_PASSWORD) {
