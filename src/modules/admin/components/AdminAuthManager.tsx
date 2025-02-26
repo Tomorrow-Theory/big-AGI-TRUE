@@ -98,11 +98,11 @@ export function AdminAuthManager() {
     <Box component="form" onSubmit={handleSubmit}>
       <Stack spacing={2}>
         <FormControl>
-          <FormLabel>Nom d'utilisateur</FormLabel>
+          <FormLabel>Nom d&apos;utilisateur</FormLabel>
           <Input
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            placeholder="Nom d'utilisateur pour l'accès à l'application"
+            placeholder="Nom d&apos;utilisateur pour l&apos;accès à l&apos;application"
             required
           />
         </FormControl>
@@ -113,7 +113,7 @@ export function AdminAuthManager() {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Mot de passe pour l'accès à l'application"
+            placeholder="Mot de passe pour l&apos;accès à l&apos;application"
             required
           />
         </FormControl>

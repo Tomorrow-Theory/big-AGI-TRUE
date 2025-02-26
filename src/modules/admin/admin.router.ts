@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { createTRPCRouter, publicProcedure } from '~/server/trpc/trpc.server';
 import { env } from '~/server/env.mjs';
-import jwt from 'jsonwebtoken';
+import * as jose from 'jose';
 import { createVercelClient, VercelEnvVar } from './vercel.client';
 
 // Clé secrète pour signer les tokens JWT
@@ -31,12 +31,13 @@ export const adminRouter = createTRPCRouter({
         return { authenticated: false };
       }
       
-      // Générer un token JWT
-      const token = jwt.sign(
-        { username: input.username },
-        JWT_SECRET,
-        { expiresIn: TOKEN_EXPIRATION }
-      );
+      // Générer un token JWT avec jose
+      const secret = new TextEncoder().encode(JWT_SECRET);
+      const token = await new jose.SignJWT({ username: input.username })
+        .setProtectedHeader({ alg: 'HS256' })
+        .setIssuedAt()
+        .setExpirationTime(TOKEN_EXPIRATION)
+        .sign(secret);
       
       return { 
         authenticated: true,
@@ -51,8 +52,9 @@ export const adminRouter = createTRPCRouter({
     }))
     .query(async ({ input }) => {
       try {
-        // Vérifier le token JWT
-        jwt.verify(input.token, JWT_SECRET);
+        // Vérifier le token JWT avec jose
+        const secret = new TextEncoder().encode(JWT_SECRET);
+        await jose.jwtVerify(input.token, secret);
         return { authenticated: true };
       } catch (err) {
         return { authenticated: false };

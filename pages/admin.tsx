@@ -58,7 +58,7 @@ export default function AdminPage() {
               <Stack spacing={2}>
                 {loginError && <Alert color="danger" sx={{ mb: 2 }}>{loginError}</Alert>}
                 <FormControl>
-                  <FormLabel>Nom d'utilisateur</FormLabel>
+                  <FormLabel>Nom d&apos;utilisateur</FormLabel>
                   <Input
                     autoFocus
                     value={username}
@@ -108,7 +108,7 @@ export default function AdminPage() {
         <CardContent>
           <Typography level="h3">Authentification HTTP Basic</Typography>
           <Typography level="body-sm" sx={{ mb: 2 }}>
-            Configurez les identifiants d'accès à l'application
+            Configurez les identifiants d&apos;accès à l&apos;application
           </Typography>
           <AdminAuthManager />
         </CardContent>
