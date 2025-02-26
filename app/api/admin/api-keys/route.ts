@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import * as jose from 'jose';
+import { createVercelClient } from '../../../../src/modules/admin/vercel.client';
 
 // Liste des clés API à gérer
 const API_KEYS = [
@@ -80,7 +81,7 @@ export async function POST(request: Request) {
     }
     
     // Récupérer les nouvelles clés API
-    const apiKeys = await request.json();
+    const apiKeys: Record<string, string> = await request.json();
     
     // Vérifier si on est sur Vercel
     if (!process.env.VERCEL_PROJECT_ID || !process.env.VERCEL_TEAM_ID || !process.env.VERCEL_API_TOKEN) {
@@ -94,11 +95,28 @@ export async function POST(request: Request) {
       }, { status: 200 });
     }
     
-    // En production, on devrait utiliser l'API Vercel pour mettre à jour les variables
-    // Mais pour l'instant, on simule un succès
-    console.log('Mise à jour des clés API en production');
-    
-    return NextResponse.json({ success: true });
+    try {
+      // En production, utiliser l'API Vercel pour mettre à jour les variables
+      console.log('Mise à jour des clés API en production via API Vercel');
+      
+      // Créer un client Vercel
+      const vercelClient = createVercelClient();
+      
+      // Mettre à jour les variables d'environnement
+      for (const [key, value] of Object.entries(apiKeys)) {
+        if (API_KEYS.includes(key) && value) {
+          await vercelClient.updateEnvironmentVariable(key, value);
+        }
+      }
+      
+      return NextResponse.json({ success: true });
+    } catch (error) {
+      console.error('Error updating environment variables:', error);
+      return NextResponse.json({ 
+        success: false, 
+        message: "Erreur lors de la mise à jour des variables d'environnement sur Vercel: " + (error instanceof Error ? error.message : String(error))
+      }, { status: 500 });
+    }
   } catch (error) {
     console.error('Error updating API keys:', error);
     return NextResponse.json(

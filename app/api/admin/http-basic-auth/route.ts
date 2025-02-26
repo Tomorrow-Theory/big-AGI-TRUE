@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import * as jose from 'jose';
+import { createVercelClient } from '../../../../src/modules/admin/vercel.client';
 
 // Vérifier le token JWT
 async function verifyToken(request: Request) {
@@ -76,11 +77,25 @@ export async function POST(request: Request) {
       }, { status: 200 });
     }
     
-    // En production, on devrait utiliser l'API Vercel pour mettre à jour les variables
-    // Mais pour l'instant, on simule un succès
-    console.log('Mise à jour des identifiants en production');
-    
-    return NextResponse.json({ success: true });
+    try {
+      // En production, utiliser l'API Vercel pour mettre à jour les variables
+      console.log('Mise à jour des identifiants en production via API Vercel');
+      
+      // Créer un client Vercel
+      const vercelClient = createVercelClient();
+      
+      // Mettre à jour les variables d'environnement
+      await vercelClient.updateEnvironmentVariable('HTTP_BASIC_AUTH_USERNAME', username);
+      await vercelClient.updateEnvironmentVariable('HTTP_BASIC_AUTH_PASSWORD', password);
+      
+      return NextResponse.json({ success: true });
+    } catch (error) {
+      console.error('Error updating environment variables:', error);
+      return NextResponse.json({ 
+        success: false, 
+        message: "Erreur lors de la mise à jour des variables d'environnement sur Vercel: " + (error instanceof Error ? error.message : String(error))
+      }, { status: 500 });
+    }
   } catch (error) {
     console.error('Error updating HTTP Basic Auth:', error);
     return NextResponse.json(
