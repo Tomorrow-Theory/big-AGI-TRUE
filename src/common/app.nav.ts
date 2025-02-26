@@ -101,7 +101,7 @@ export const navItems: {
       hideDrawer: true,
       panelAsMenu: true,
       fullWidth: true,
-      _delete: true,
+      _delete: true ,
     },
     // {
     //   name: 'Draw',
