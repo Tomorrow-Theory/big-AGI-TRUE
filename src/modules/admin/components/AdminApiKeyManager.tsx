@@ -3,16 +3,21 @@ import { Alert, Box, Button, CircularProgress, Divider, FormControl, FormLabel, 
 
 // Liste des clés API à gérer
 const API_KEYS = [
-  { key: 'OPENAI_API_KEY', label: 'OpenAI API Key', description: 'Clé API pour OpenAI' },
-  { key: 'ANTHROPIC_API_KEY', label: 'Anthropic API Key', description: 'Clé API pour Anthropic' },
-  { key: 'GEMINI_API_KEY', label: 'Gemini API Key', description: 'Clé API pour Google Gemini' },
-  { key: 'GROQ_API_KEY', label: 'Groq API Key', description: 'Clé API pour Groq' },
-  { key: 'MISTRAL_API_KEY', label: 'Mistral API Key', description: 'Clé API pour Mistral AI' },
-  { key: 'PERPLEXITY_API_KEY', label: 'Perplexity API Key', description: 'Clé API pour Perplexity' },
-  { key: 'ELEVENLABS_API_KEY', label: 'ElevenLabs API Key', description: 'Clé API pour ElevenLabs (Text-to-Speech)' },
-  { key: 'PRODIA_API_KEY', label: 'Prodia API Key', description: 'Clé API pour Prodia (Text-to-Image)' },
-  { key: 'GOOGLE_CLOUD_API_KEY', label: 'Google Cloud API Key', description: 'Clé API pour Google Cloud' },
-  { key: 'GOOGLE_CSE_ID', label: 'Google CSE ID', description: 'ID pour Google Custom Search Engine' },
+  { key: 'OPENAI_API_KEY', label: 'OpenAI API Key', description: 'Clé API pour OpenAI', link: 'https://platform.openai.com/api-keys' },
+  { key: 'ANTHROPIC_API_KEY', label: 'Anthropic API Key', description: 'Clé API pour Anthropic', link: 'https://console.anthropic.com/settings/keys' },
+  { key: 'GEMINI_API_KEY', label: 'Gemini API Key', description: 'Clé API pour Google Gemini', link: 'https://aistudio.google.com/app/apikey' },
+  { key: 'GROQ_API_KEY', label: 'Groq API Key', description: 'Clé API pour Groq', link: 'https://console.groq.com/keys' },
+  { key: 'MISTRAL_API_KEY', label: 'Mistral API Key', description: 'Clé API pour Mistral AI', link: 'https://console.mistral.ai/' },
+  { key: 'PERPLEXITY_API_KEY', label: 'Perplexity API Key', description: 'Clé API pour Perplexity', link: 'https://www.perplexity.ai/settings/api' },
+  { key: 'OPENROUTER_API_KEY', label: 'OpenRouter API Key', description: 'Clé API pour OpenRouter', link: 'https://openrouter.ai/keys' },
+  { key: 'TOGETHERAI_API_KEY', label: 'TogetherAI API Key', description: 'Clé API pour TogetherAI', link: 'https://api.together.xyz/settings/api-keys' },
+  { key: 'XAI_API_KEY', label: 'XAI API Key', description: 'Clé API pour XAI', link: 'https://console.x.ai/' },
+  { key: 'DEEPSEEK_API_KEY', label: 'Deepseek API Key', description: 'Clé API pour Deepseek', link: 'https://platform.deepseek.com/api_keys' },
+  { key: 'ALIBABA_API_KEY', label: 'Alibaba API Key', description: 'Clé API pour Alibaba', link: 'https://bailian.console.alibabacloud.com/?apiKey=1#/api-key' },
+  { key: 'ELEVENLABS_API_KEY', label: 'ElevenLabs API Key', description: 'Clé API pour ElevenLabs (Text-to-Speech)', link: 'https://elevenlabs.io/app/settings/api-keys' },
+  { key: 'PRODIA_API_KEY', label: 'Prodia API Key', description: 'Clé API pour Prodia (Text-to-Image)', link: 'https://app.prodia.com/api' },
+  { key: 'GOOGLE_CLOUD_API_KEY', label: 'Google Cloud API Key', description: 'Clé API pour Google Cloud', link: 'https://console.cloud.google.com/apis/credentials' },
+  { key: 'GOOGLE_CSE_ID', label: 'Google CSE ID', description: 'ID pour Google Custom Search Engine', link: 'https://programmablesearchengine.google.com/controlpanel/all' },
 ];
 
 export function AdminApiKeyManager() {
@@ -141,7 +146,14 @@ export function AdminApiKeyManager() {
           <React.Fragment key={apiKey.key}>
             {index > 0 && <Divider />}
             <FormControl>
-              <FormLabel>{apiKey.label}</FormLabel>
+              <FormLabel>
+                {apiKey.label}
+                {apiKey.link && (
+                  <Typography component="span" ml={1} fontSize="sm">
+                    (<a href={apiKey.link} target="_blank" rel="noopener noreferrer">Obtenir une clé</a>)
+                  </Typography>
+                )}
+              </FormLabel>
               <Input
                 value={apiKeys[apiKey.key] || ''}
                 onChange={(e) => handleChange(apiKey.key, e.target.value)}

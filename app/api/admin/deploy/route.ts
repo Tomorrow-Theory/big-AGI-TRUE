@@ -71,7 +71,7 @@ export async function POST(request: Request) {
         success: true,
         deploymentId: deployment.id,
         skipBuild: skipBuild,
-        message: `Redéploiement avec rebuild complet déclenché avec succès. L&apos;application sera mise à jour dans environ 5 minutes.`
+        message: `Redéploiement avec rebuild complet déclenché avec succès. L&apos;application sera mise à jour dans environ 5-10 minutes.`
       });
     } catch (error) {
       console.error('Error triggering deployment:', error);
