@@ -38,7 +38,7 @@ export function middleware(request: NextRequest) {
   const [username, password] = credentials.split(':');
   if (
     !username || !password ||
-    username !== process.env.HTTP_BASIC_AUTH_USERNAME ||
+    username !== process.env.HTTP_BASIC_AUTH_USERNAME || 
     password !== process.env.HTTP_BASIC_AUTH_PASSWORD
   )
     return new Response('Unauthorized', unauthResponse);
