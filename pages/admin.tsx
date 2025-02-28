@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { Box, Button, Card, CardContent, Container, Divider, FormControl, FormLabel, Input, Stack, Typography, CircularProgress, Alert, Snackbar, Modal, ModalDialog, ModalClose } from '@mui/joy';
 import LogoutIcon from '@mui/icons-material/Logout';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useAdminAuth } from '../src/modules/admin/hooks/useAdminAuth';
 import { Brand } from '../src/common/app.config';
 import { AppLayout } from '../src/common/layouts/AppLayout';
@@ -43,6 +44,10 @@ export default function AdminPage() {
 
   const handleLogout = () => {
     logout();
+  };
+
+  const handleGoHome = () => {
+    router.push('/');
   };
 
   const handleDeploy = async () => {
@@ -163,6 +168,14 @@ export default function AdminPage() {
             startDecorator={<LogoutIcon />}
           >
             Déconnexion
+          </Button>
+          <Button 
+            variant="outlined" 
+            color="primary" 
+            onClick={handleGoHome}
+            startDecorator={<ArrowBackIcon />}
+          >
+            Retour à l&apos;accueil
           </Button>
         </Box>
       </Box>
