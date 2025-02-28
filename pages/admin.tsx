@@ -225,7 +225,7 @@ export default function AdminPage() {
           </Typography>
           <Typography id="deployment-success-modal-description" textColor="text.tertiary">
             Le redéploiement sans rebuild a été déclenché avec succès. 
-            L'application sera mise à jour dans environ 1 minute.
+            L&apos;application sera mise à jour dans environ 1 minute.
           </Typography>
           <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
             <Button
