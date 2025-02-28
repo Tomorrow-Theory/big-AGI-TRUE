@@ -18,8 +18,8 @@ export default function AdminPage() {
   const [deploymentStatus, setDeploymentStatus] = React.useState<{ message: string; severity: 'success' | 'danger' | 'warning' } | null>(null);
   const [isDeploying, setIsDeploying] = React.useState(false);
   const [showDeploymentModal, setShowDeploymentModal] = React.useState(false);
-  // Toujours sans rebuild par défaut
-  const skipBuild = true;
+  // Toujours avec rebuild complet par défaut
+  const skipBuild = false;
 
   React.useEffect(() => {
     if (error) {
@@ -224,8 +224,8 @@ export default function AdminPage() {
             Déploiement en cours
           </Typography>
           <Typography id="deployment-success-modal-description" textColor="text.tertiary">
-            Le redéploiement sans rebuild a été déclenché avec succès. 
-            L&apos;application sera mise à jour dans environ 1 minute.
+            Le redéploiement avec rebuild complet a été déclenché avec succès. 
+            L&apos;application sera mise à jour dans environ 5 minutes.
           </Typography>
           <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
             <Button

@@ -42,8 +42,8 @@ export async function POST(request: Request) {
     
     // Récupérer les données de la requête
     const data = await request.json().catch(() => ({}));
-    // Toujours sans rebuild par défaut, même si le paramètre n'est pas fourni
-    const skipBuild = data.skipBuild !== false;
+    // Toujours avec rebuild complet par défaut, sauf si explicitement demandé sans
+    const skipBuild = data.skipBuild === true;
     
     // Vérifier si on est sur Vercel
     if (!process.env.VERCEL_PROJECT_ID || !process.env.VERCEL_TEAM_ID || !process.env.VERCEL_API_TOKEN) {
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
     
     try {
       // En production, utiliser l'API Vercel pour déclencher un redéploiement
-      console.log(`Déclenchement d'un redéploiement en production via API Vercel sans rebuild`);
+      console.log(`Déclenchement d'un redéploiement en production via API Vercel avec rebuild complet`);
       
       // Créer un client Vercel
       const vercelClient = createVercelClient();
@@ -71,7 +71,7 @@ export async function POST(request: Request) {
         success: true,
         deploymentId: deployment.id,
         skipBuild: skipBuild,
-        message: `Redéploiement sans rebuild déclenché avec succès. L'application sera mise à jour dans environ 1 minute.`
+        message: `Redéploiement avec rebuild complet déclenché avec succès. L&apos;application sera mise à jour dans environ 5 minutes.`
       });
     } catch (error) {
       console.error('Error triggering deployment:', error);
