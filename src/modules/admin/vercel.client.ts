@@ -19,6 +19,7 @@ export interface VercelEnvVar {
 interface VercelClient {
   getEnvironmentVariables: () => Promise<VercelEnvVar[]>;
   updateEnvironmentVariable: (key: string, value: string) => Promise<void>;
+  triggerDeployment: () => Promise<{ id: string }>;
 }
 
 export function createVercelClient(): VercelClient {
@@ -109,8 +110,108 @@ export function createVercelClient(): VercelClient {
     }
   };
   
+  /**
+   * Déclencher un redéploiement du projet sur Vercel
+   * Documentation: https://vercel.com/docs/rest-api#endpoints/deployments
+   */
+  const triggerDeployment = async (): Promise<{ id: string }> => {
+    try {
+      // Approche 1: Essayer d'abord l'API de redéploiement
+      try {
+        const redeployUrl = `${baseUrl}/v13/deployments/${projectId}/redeploy?teamId=${teamId}`;
+        
+        const redeployResponse = await fetch(redeployUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (redeployResponse.ok) {
+          const data = await redeployResponse.json();
+          return { id: data.id || 'redeployment-triggered' };
+        }
+      } catch (redeployError) {
+        console.warn('Redeploy method failed, trying alternative approach:', redeployError);
+      }
+      
+      // Approche 2: Utiliser l'API de déploiement avec l'option forceNew
+      try {
+        const forceNewUrl = `${baseUrl}/v13/projects/${projectId}/deployments?teamId=${teamId}&forceNew=1`;
+        
+        const forceNewResponse = await fetch(forceNewUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (forceNewResponse.ok) {
+          const data = await forceNewResponse.json();
+          return { id: data.id || 'force-new-deployment-triggered' };
+        }
+      } catch (forceNewError) {
+        console.warn('Force new deployment method failed, trying final approach:', forceNewError);
+      }
+      
+      // Approche 3: Si les approches précédentes échouent, récupérer les informations du projet
+      const projectUrl = `${baseUrl}/v9/projects/${projectId}?teamId=${teamId}`;
+      
+      const projectResponse = await fetch(projectUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${apiToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!projectResponse.ok) {
+        const errorText = await projectResponse.text();
+        throw new Error(`Failed to get project info: ${projectResponse.status} ${errorText}`);
+      }
+      
+      const projectData = await projectResponse.json();
+      
+      // Créer un nouveau déploiement avec les informations du projet
+      const deployUrl = `${baseUrl}/v13/deployments?teamId=${teamId}`;
+      
+      const deployResponse = await fetch(deployUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: projectId,
+          project: projectId,
+          target: 'production',
+          // Utiliser les informations du projet pour le gitSource
+          gitSource: {
+            type: projectData.link?.type || 'github',
+            repoId: projectData.link?.repoId || projectData.id,
+            ref: projectData.link?.ref || 'main',
+          },
+        }),
+      });
+      
+      if (!deployResponse.ok) {
+        const errorText = await deployResponse.text();
+        throw new Error(`Failed to trigger deployment: ${deployResponse.status} ${errorText}`);
+      }
+      
+      const deployData = await deployResponse.json();
+      return { id: deployData.id };
+    } catch (error) {
+      console.error('Error triggering deployment:', error);
+      throw error;
+    }
+  };
+  
   return {
     getEnvironmentVariables,
     updateEnvironmentVariable,
+    triggerDeployment,
   };
 } 

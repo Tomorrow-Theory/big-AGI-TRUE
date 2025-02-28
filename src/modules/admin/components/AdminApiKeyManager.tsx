@@ -17,9 +17,26 @@ const API_KEYS = [
 
 export function AdminApiKeyManager() {
   const [apiKeys, setApiKeys] = React.useState<Record<string, string>>({});
+  const [initialApiKeys, setInitialApiKeys] = React.useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = React.useState(false);
   const [success, setSuccess] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [hasChanges, setHasChanges] = React.useState(false);
+
+  // Vérifier s'il y a des changements
+  React.useEffect(() => {
+    let changed = false;
+    
+    // Vérifier si des clés ont été ajoutées, modifiées ou supprimées
+    for (const key of API_KEYS.map(k => k.key)) {
+      if (apiKeys[key] !== initialApiKeys[key]) {
+        changed = true;
+        break;
+      }
+    }
+    
+    setHasChanges(changed);
+  }, [apiKeys, initialApiKeys]);
 
   // Charger les valeurs actuelles
   React.useEffect(() => {
@@ -48,6 +65,7 @@ export function AdminApiKeyManager() {
         
         const result = await response.json();
         setApiKeys(result);
+        setInitialApiKeys(result);
       } catch (err) {
         console.error('Error fetching API keys:', err);
         setError('Erreur lors du chargement des clés API');
@@ -91,6 +109,8 @@ export function AdminApiKeyManager() {
       
       if (result.success) {
         setSuccess(true);
+        // Mettre à jour les valeurs initiales après un enregistrement réussi
+        setInitialApiKeys({...apiKeys});
       } else {
         // Si l'API retourne success: false, on affiche le message d'erreur
         if (result.message) {
@@ -149,7 +169,7 @@ export function AdminApiKeyManager() {
         
         <Button 
           type="submit" 
-          disabled={isLoading}
+          disabled={isLoading || !hasChanges}
           startDecorator={isLoading ? <CircularProgress size="sm" /> : null}
         >
           Enregistrer toutes les clés

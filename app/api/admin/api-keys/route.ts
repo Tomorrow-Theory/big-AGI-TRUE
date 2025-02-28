@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import * as jose from 'jose';
-import { getEnvironmentVariables, updateEnvironmentVariable } from '../../../../src/modules/admin/env.service';
+import { createVercelClient } from '../../../../src/modules/admin/vercel.client';
 
 // Liste des clés API à gérer
 const API_KEYS = [
@@ -52,13 +52,12 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    // Récupérer toutes les variables d'environnement depuis MongoDB
-    const envVars = await getEnvironmentVariables();
-    
-    // Filtrer pour ne garder que les clés API
+    // Récupérer les clés API
     const apiKeys: Record<string, string> = {};
+    
+    // En local, on récupère les valeurs du .env
     for (const key of API_KEYS) {
-      apiKeys[key] = envVars[key] || '';
+      apiKeys[key] = process.env[key] || '';
     }
     
     return NextResponse.json(apiKeys);
@@ -84,13 +83,29 @@ export async function POST(request: Request) {
     // Récupérer les nouvelles clés API
     const apiKeys: Record<string, string> = await request.json();
     
+    // Vérifier si on est sur Vercel
+    if (!process.env.VERCEL_PROJECT_ID || !process.env.VERCEL_TEAM_ID || !process.env.VERCEL_API_TOKEN) {
+      // En local, on ne peut pas mettre à jour les variables d'environnement
+      console.log('Tentative de mise à jour des clés API en environnement local');
+      
+      // Retourner un message explicite indiquant que la mise à jour n'est pas possible
+      return NextResponse.json({ 
+        success: false, 
+        message: "En environnement local, les mises à jour des variables d'environnement ne sont pas possibles. Cette fonctionnalité n'est disponible qu'en production sur Vercel."
+      }, { status: 200 });
+    }
+    
     try {
-      // Mettre à jour les variables dans MongoDB
+      // En production, utiliser l'API Vercel pour mettre à jour les variables
+      console.log('Mise à jour des clés API en production via API Vercel');
+      
+      // Créer un client Vercel
+      const vercelClient = createVercelClient();
+      
+      // Mettre à jour les variables d'environnement
       for (const [key, value] of Object.entries(apiKeys)) {
         if (API_KEYS.includes(key) && value) {
-          await updateEnvironmentVariable(key, value);
-          // Mettre à jour process.env
-          process.env[key] = value;
+          await vercelClient.updateEnvironmentVariable(key, value);
         }
       }
       
@@ -99,7 +114,7 @@ export async function POST(request: Request) {
       console.error('Error updating environment variables:', error);
       return NextResponse.json({ 
         success: false, 
-        message: "Erreur lors de la mise à jour des variables d'environnement: " + (error instanceof Error ? error.message : String(error))
+        message: "Erreur lors de la mise à jour des variables d'environnement sur Vercel: " + (error instanceof Error ? error.message : String(error))
       }, { status: 500 });
     }
   } catch (error) {
@@ -111,4 +126,4 @@ export async function POST(request: Request) {
   }
 }
 
-export const runtime = 'node'; 
+export const runtime = 'edge'; 

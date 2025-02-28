@@ -4,9 +4,18 @@ import { Alert, Box, Button, CircularProgress, FormControl, FormLabel, Input, St
 export function AdminAuthManager() {
   const [username, setUsername] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const [initialUsername, setInitialUsername] = React.useState('');
+  const [initialPassword, setInitialPassword] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(false);
   const [success, setSuccess] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [hasChanges, setHasChanges] = React.useState(false);
+
+  // Vérifier s'il y a des changements
+  React.useEffect(() => {
+    const changed = username !== initialUsername || password !== initialPassword;
+    setHasChanges(changed);
+  }, [username, password, initialUsername, initialPassword]);
 
   // Charger les valeurs actuelles
   React.useEffect(() => {
@@ -35,8 +44,13 @@ export function AdminAuthManager() {
         
         const result = await response.json();
         
-        setUsername(result.username || '');
-        setPassword(result.password || '');
+        const loadedUsername = result.username || '';
+        const loadedPassword = result.password || '';
+        
+        setUsername(loadedUsername);
+        setPassword(loadedPassword);
+        setInitialUsername(loadedUsername);
+        setInitialPassword(loadedPassword);
       } catch (err) {
         console.error('Error fetching HTTP Basic Auth values:', err);
         setError('Erreur lors du chargement des identifiants');
@@ -83,6 +97,9 @@ export function AdminAuthManager() {
       
       if (result.success) {
         setSuccess(true);
+        // Mettre à jour les valeurs initiales après un enregistrement réussi
+        setInitialUsername(username);
+        setInitialPassword(password);
       } else {
         // Si l'API retourne success: false, on affiche le message d'erreur
         if (result.message) {
@@ -137,7 +154,7 @@ export function AdminAuthManager() {
         
         <Button 
           type="submit" 
-          disabled={isLoading}
+          disabled={isLoading || !hasChanges}
           startDecorator={isLoading ? <CircularProgress size="sm" /> : null}
         >
           Enregistrer

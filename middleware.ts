@@ -8,16 +8,9 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
-// Response to send when authentication is required
-const unauthResponse: ResponseInit = {
-  status: 401,
-  headers: {
-    'WWW-Authenticate': 'Basic realm="Secure big-AGI"',
-  },
-};
 
 // noinspection JSUnusedGlobalSymbols
-export async function middleware(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
   // Skip authentication for the admin page and admin API routes
@@ -28,52 +21,39 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Validate deployment configuration
+  if (!process.env.HTTP_BASIC_AUTH_USERNAME || !process.env.HTTP_BASIC_AUTH_PASSWORD) {
+    console.warn('HTTP Basic Authentication is enabled but not configured');
+    return new Response('Unauthorized/Unconfigured', unauthResponse);
+  }
+
   // Request client authentication if no credentials are provided
   const authHeader = request.headers.get('authorization');
   if (!authHeader?.startsWith('Basic '))
     return new Response('Unauthorized', unauthResponse);
 
-  // Decode credentials
+  // Request authentication if credentials are invalid
   const base64Credentials = authHeader.split(' ')[1];
   const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
   const [username, password] = credentials.split(':');
-  
-  if (!username || !password)
+  if (
+    !username || !password ||
+    username !== process.env.HTTP_BASIC_AUTH_USERNAME ||
+    password !== process.env.HTTP_BASIC_AUTH_PASSWORD
+  )
     return new Response('Unauthorized', unauthResponse);
 
-  try {
-    // Construire l'URL absolue pour la vérification
-    const protocol = request.nextUrl.protocol;
-    const host = request.headers.get('host');
-    const verifyUrl = `${protocol}//${host}/api/admin/auth/verify`;
-
-    // Vérifier les identifiants via l'API
-    const response = await fetch(verifyUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ username, password }),
-    });
-
-    if (!response.ok) {
-      console.error('Verify API returned status:', response.status);
-      return new Response('Unauthorized', unauthResponse);
-    }
-
-    const { isValid } = await response.json();
-    console.log('Auth verification result:', { username, isValid });
-
-    if (!isValid) {
-      return new Response('Unauthorized', unauthResponse);
-    }
-
-    return NextResponse.next();
-  } catch (error) {
-    console.error('Error verifying credentials:', error);
-    return new Response('Internal Server Error', { status: 500 });
-  }
+  return NextResponse.next();
 }
+
+
+// Response to send when authentication is required
+const unauthResponse: ResponseInit = {
+  status: 401,
+  headers: {
+    'WWW-Authenticate': 'Basic realm="Secure big-AGI"',
+  },
+};
 
 export const config = {
   matcher: [
