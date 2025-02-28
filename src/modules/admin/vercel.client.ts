@@ -19,7 +19,7 @@ export interface VercelEnvVar {
 interface VercelClient {
   getEnvironmentVariables: () => Promise<VercelEnvVar[]>;
   updateEnvironmentVariable: (key: string, value: string) => Promise<void>;
-  triggerDeployment: () => Promise<{ id: string }>;
+  triggerDeployment: (skipBuild?: boolean) => Promise<{ id: string }>;
 }
 
 export function createVercelClient(): VercelClient {
@@ -113,12 +113,13 @@ export function createVercelClient(): VercelClient {
   /**
    * Déclencher un redéploiement du projet sur Vercel
    * Documentation: https://vercel.com/docs/rest-api#endpoints/deployments
+   * @param skipBuild Si true, redéploie sans reconstruire l'application (utile pour les variables d'environnement côté serveur)
    */
-  const triggerDeployment = async (): Promise<{ id: string }> => {
+  const triggerDeployment = async (skipBuild = false): Promise<{ id: string }> => {
     try {
       // Approche 1: Essayer d'abord l'API de redéploiement
       try {
-        const redeployUrl = `${baseUrl}/v13/deployments/${projectId}/redeploy?teamId=${teamId}`;
+        const redeployUrl = `${baseUrl}/v13/deployments/${projectId}/redeploy?teamId=${teamId}${skipBuild ? '&skipBuild=1' : ''}`;
         
         const redeployResponse = await fetch(redeployUrl, {
           method: 'POST',
@@ -138,7 +139,7 @@ export function createVercelClient(): VercelClient {
       
       // Approche 2: Utiliser l'API de déploiement avec l'option forceNew
       try {
-        const forceNewUrl = `${baseUrl}/v13/projects/${projectId}/deployments?teamId=${teamId}&forceNew=1`;
+        const forceNewUrl = `${baseUrl}/v13/projects/${projectId}/deployments?teamId=${teamId}&forceNew=1${skipBuild ? '&skipBuild=1' : ''}`;
         
         const forceNewResponse = await fetch(forceNewUrl, {
           method: 'POST',
@@ -175,7 +176,7 @@ export function createVercelClient(): VercelClient {
       const projectData = await projectResponse.json();
       
       // Créer un nouveau déploiement avec les informations du projet
-      const deployUrl = `${baseUrl}/v13/deployments?teamId=${teamId}`;
+      const deployUrl = `${baseUrl}/v13/deployments?teamId=${teamId}${skipBuild ? '&skipBuild=1' : ''}`;
       
       const deployResponse = await fetch(deployUrl, {
         method: 'POST',

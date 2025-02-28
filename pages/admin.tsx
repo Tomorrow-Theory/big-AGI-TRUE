@@ -18,6 +18,8 @@ export default function AdminPage() {
   const [deploymentStatus, setDeploymentStatus] = React.useState<{ message: string; severity: 'success' | 'danger' | 'warning' } | null>(null);
   const [isDeploying, setIsDeploying] = React.useState(false);
   const [showDeploymentModal, setShowDeploymentModal] = React.useState(false);
+  // Toujours sans rebuild par défaut
+  const skipBuild = true;
 
   React.useEffect(() => {
     if (error) {
@@ -66,7 +68,8 @@ export default function AdminPage() {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
-        }
+        },
+        body: JSON.stringify({ skipBuild })
       });
       
       const data = await response.json();
@@ -142,7 +145,7 @@ export default function AdminPage() {
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
         <Typography level="h2">Administration {Brand.Title.Base}</Typography>
-        <Box sx={{ display: 'flex', gap: 2 }}>
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
           <Button 
             variant="solid" 
             color="primary" 
@@ -221,7 +224,8 @@ export default function AdminPage() {
             Déploiement en cours
           </Typography>
           <Typography id="deployment-success-modal-description" textColor="text.tertiary">
-            Le redéploiement a été déclenché avec succès. Veuillez patienter environ 5 minutes pour que les changements soient appliqués sur l&apos;application.
+            Le redéploiement sans rebuild a été déclenché avec succès. 
+            L'application sera mise à jour dans environ 1 minute.
           </Typography>
           <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
             <Button

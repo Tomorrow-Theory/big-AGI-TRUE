@@ -40,6 +40,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
+    // Récupérer les données de la requête
+    const data = await request.json().catch(() => ({}));
+    // Toujours sans rebuild par défaut, même si le paramètre n'est pas fourni
+    const skipBuild = data.skipBuild !== false;
+    
     // Vérifier si on est sur Vercel
     if (!process.env.VERCEL_PROJECT_ID || !process.env.VERCEL_TEAM_ID || !process.env.VERCEL_API_TOKEN) {
       // En local, on ne peut pas déclencher de redéploiement
@@ -54,18 +59,19 @@ export async function POST(request: Request) {
     
     try {
       // En production, utiliser l'API Vercel pour déclencher un redéploiement
-      console.log('Déclenchement d\'un redéploiement en production via API Vercel');
+      console.log(`Déclenchement d'un redéploiement en production via API Vercel sans rebuild`);
       
       // Créer un client Vercel
       const vercelClient = createVercelClient();
       
-      // Déclencher le redéploiement
-      const deployment = await vercelClient.triggerDeployment();
+      // Déclencher le redéploiement avec l'option skipBuild
+      const deployment = await vercelClient.triggerDeployment(skipBuild);
       
       return NextResponse.json({ 
         success: true,
         deploymentId: deployment.id,
-        message: "Redéploiement déclenché avec succès. L'application sera mise à jour dans quelques minutes."
+        skipBuild: skipBuild,
+        message: `Redéploiement sans rebuild déclenché avec succès. L'application sera mise à jour dans environ 1 minute.`
       });
     } catch (error) {
       console.error('Error triggering deployment:', error);
