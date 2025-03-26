@@ -49,12 +49,12 @@ export interface NavItemApp extends ItemBase {
   barTitle?: string,      // set to override the name as the bar title (unless custom bar content is used)
   hideOnMobile?: boolean, // set to true to hide the icon on mobile, unless this is the active app
   hideIcon?: boolean
-    | (() => boolean),    // set to true to hide the icon, unless this is the active app
+  | (() => boolean),    // set to true to hide the icon, unless this is the active app
   hideBar?: boolean,      // set to true to hide the page bar
   hideDrawer?: boolean,   // set to true to hide the drawer
   panelAsMenu?: boolean,  // set to true to use the popup menu as the panel
   hideNav?: boolean
-    | (() => boolean),    // set to hide the Nav bar (note: must have a way to navigate back)
+  | (() => boolean),    // set to hide the Nav bar (note: must have a way to navigate back)
   fullWidth?: boolean,    // set to true to override the user preference
   isDev?: boolean,        // show a 'dev mode' badge
   _delete?: boolean,      // delete from the UI
@@ -219,12 +219,12 @@ export const navItems: {
 
   // Modals
   modals: [
-    {
-      name: 'Configure AI Models',
-      icon: BuildCircleIcon,
-      type: 'modal',
-      overlayId: 'models',
-    },
+    // {
+    //  name: 'Configure AI Models',
+    //  icon: BuildCircleIcon,
+    //  type: 'modal',
+    //  overlayId: 'models',
+    //},
     {
       name: 'App Preferences',
       icon: SettingsIcon,
@@ -243,16 +243,16 @@ export const navItems: {
     // },
     //{
     //  type: 'extLink',
-   //   name: 'Discord',
-   //   icon: DiscordIcon,
-   //   href: Brand.URIs.SupportInvite,
-   // },
-   // {
-   //   type: 'extLink',
-   //   name: 'GitHub',
-   //   icon: GitHubIcon,
-   //   href: Brand.URIs.OpenRepo,
-  //  },
+    //   name: 'Discord',
+    //   icon: DiscordIcon,
+    //   href: Brand.URIs.SupportInvite,
+    // },
+    // {
+    //   type: 'extLink',
+    //   name: 'GitHub',
+    //   icon: GitHubIcon,
+    //   href: Brand.URIs.OpenRepo,
+    //  },
   ],
 
 };

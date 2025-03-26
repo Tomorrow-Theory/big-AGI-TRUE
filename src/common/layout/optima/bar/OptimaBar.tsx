@@ -166,51 +166,7 @@ export function OptimaBar(props: { component: React.ElementType, currentApp?: Na
       {/* Pluggable Toolbar Items */}
       <CenterItemsPortal currentApp={props.currentApp} />
 
-      {/* (PREVIEW) Preview Menu */}
-      {!props.isMobile && (
-        <Dropdown>
-          <MenuButton
-            aria-label='Notifications Menu'
-            slots={{ root: IconButton }}
-            slotProps={{ root: { size: 'md' } }}
-          >
-            {/*<NotificationsNoneOutlinedIcon />*/}
-            <LightbulbOutlinedIcon />
-            {/*<FeedbackOutlinedIcon />*/}
-          </MenuButton>
-
-          <Menu placement='bottom-end' sx={{ minWidth: 220 }}>
-            <ListItem>
-              <Typography level='body-xs' sx={{ textTransform: 'uppercase' }}>
-                {Release.App.versionName}
-              </Typography>
-            </ListItem>
-
-            {!!releaseNotesUrl && (
-              <MenuItem onClick={handleShowReleaseNotes}>
-                <ListItemDecorator><NewReleasesIcon /></ListItemDecorator>
-                Release Notes
-              </MenuItem>
-            )}
-            <MenuItem onClick={handleShowTechnologies}>
-              {/*<ListItemDecorator><EventNoteOutlinedIcon /></ListItemDecorator>*/}
-              <ListItemDecorator><EngineeringIcon /></ListItemDecorator>
-              Build Info
-            </MenuItem>
-
-
-
-            {/*<ListDivider />*/}
-
-            {/*<TooltipOutlined title={usersnapLoadingError}>*/}
-            {/*  <MenuItem onClick={openUsersnap}>*/}
-            {/*    <ListItemDecorator><FeedbackIcon /></ListItemDecorator>*/}
-            {/*    Feedback -&gt; Enrico*/}
-            {/*  </MenuItem>*/}
-            {/*</TooltipOutlined>*/}
-          </Menu>
-        </Dropdown>
-      )}
+    
 
       {/* Panel Open: has content always on Mobile (the app menu) */}
       {panelHasContent && (

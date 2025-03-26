@@ -123,6 +123,7 @@ export const _knownOpenAIChatModels: ManualMappings = [
     idPrefix: 'o1-2024-12-17',
     label: 'o1 (2024-12-17)',
     description: 'Latest o1 model.',
+    hidden: true,
     contextWindow: 200000,
     maxCompletionTokens: 100000,
     trainingDataCutoff: 'Oct 2023',
@@ -130,7 +131,6 @@ export const _knownOpenAIChatModels: ManualMappings = [
     parameterSpecs: [{ paramId: 'llmVndOaiReasoningEffort' }, { paramId: 'llmVndOaiRestoreMarkdown' }],
     chatPrice: { input: 15, cache: { cType: 'oai-ac', read: 7.5 }, output: 60 },
     benchmark: { cbaElo: 1352 },
-    hidden: true,
   },
 
   // o1-preview
@@ -213,6 +213,7 @@ export const _knownOpenAIChatModels: ManualMappings = [
     label: 'GPT-4.5 Preview (2025-02-27)',
     description: 'Research preview of GPT-4.5, our largest and most capable GPT model yet. Deep world knowledge and better understanding of user intent makes it good at creative tasks and agentic planning.',
     contextWindow: 128000,
+    hidden: true,
     maxCompletionTokens: 16384,
     trainingDataCutoff: 'Oct 2023',
     interfaces: [LLM_IF_OAI_Chat, LLM_IF_OAI_Vision, LLM_IF_OAI_Fn, LLM_IF_OAI_Json, LLM_IF_OAI_PromptCaching],

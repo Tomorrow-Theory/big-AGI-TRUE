@@ -168,13 +168,13 @@ function LLMDropdown(props: {
     {/*  </ListItemButton>*/}
     {/*)}*/}
 
-    <ListItemButton key='menu-llms' onClick={optimaOpenModels} sx={{ backgroundColor: 'background.surface' }}>
+    {/*  <ListItemButton key='menu-llms' onClick={optimaOpenModels} sx={{ backgroundColor: 'background.surface' }}>
       <ListItemDecorator><BuildCircleIcon color='success' /></ListItemDecorator>
       <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'space-between', gap: 1 }}>
         Models
         <KeyStroke variant='outlined' combo='Ctrl + Shift + M' sx={{ ml: 2 }} />
       </Box>
-    </ListItemButton>
+    </ListItemButton>*/}
 
   </>, []);
 
