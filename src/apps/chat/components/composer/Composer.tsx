@@ -823,8 +823,6 @@ export function Composer(props: {
                     onChange={handleTextareaTextChange}
                     onKeyDown={handleTextareaKeyDown}
                     onPasteCapture={handleAttachCtrlV}
-                    // onFocusCapture={handleFocusModeOn}
-                    // onBlurCapture={handleFocusModeOff}
                     endDecorator={isDraw
                       ? <ComposerTextAreaDrawActions
                         composerText={composeText}
@@ -963,7 +961,7 @@ export function Composer(props: {
               {/* [desktop] This column arrangement will have the [desktop] beam button right under call */}
               <Box sx={isMobile ? { display: 'flex' } : { display: 'grid', gap: 1 }}>
 
-                {/* [mobile] bottom-corner secondary button }
+                {/* [mobile] bottom-corner secondary button }*/}
                 {isMobile && (showChatExtras
                     ? (composerQuickButton === 'call' && speechMayWork
                       ? <ButtonCallMemo isMobile disabled={noConversation || noLLM} onClick={handleCallClicked} />
@@ -971,7 +969,7 @@ export function Composer(props: {
                     : isDraw
                       ? <ButtonOptionsDraw isMobile onClick={handleDrawOptionsClicked} sx={{ mr: { xs: 1, md: 2 } }} />
                       : <IconButton disabled sx={{ mr: { xs: 1, md: 2 } }} />
-                )*/}
+                )}
 
                 {/* Responsive Send/Stop buttons */}
                 <ButtonGroup
