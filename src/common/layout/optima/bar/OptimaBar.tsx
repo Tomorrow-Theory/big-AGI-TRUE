@@ -178,7 +178,7 @@ export function OptimaBar(props: { component: React.ElementType, currentApp?: Na
             slotProps={{ root: { size: 'md' } }}
           >
             {/*<NotificationsNoneOutlinedIcon />*/}
-            <LightbulbOutlinedIcon />
+            
             {/*<FeedbackOutlinedIcon />*/}
           </MenuButton>
 
