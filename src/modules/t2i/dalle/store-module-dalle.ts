@@ -89,7 +89,7 @@ export const useDalleStore = create<ModuleDalleStore>()(
       dalleSizeGI: '1024x1024',
       setDalleSizeGI: (dalleSizeGI) => set({ dalleSizeGI }),
 
-      dalleQualityGI: 'high',
+      dalleQualityGI: 'medium',
       setDalleQualityGI: (dalleQualityGI) => set({ dalleQualityGI }),
 
       dalleBackgroundGI: 'auto',
