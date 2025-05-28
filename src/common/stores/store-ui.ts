@@ -104,13 +104,13 @@ export const useUIPreferencesStore = create<UIPreferencesStore>()(
       increaseContentScaling: () => set((state) => state.contentScaling === 'md' ? state : { contentScaling: state.contentScaling === 'xs' ? 'sm' : 'md' }),
       decreaseContentScaling: () => set((state) => state.contentScaling === 'xs' ? state : { contentScaling: state.contentScaling === 'md' ? 'sm' : 'xs' }),
 
-      doubleClickToEdit: false,
+      doubleClickToEdit: true,
       setDoubleClickToEdit: (doubleClickToEdit: boolean) => set({ doubleClickToEdit }),
 
       disableMarkdown: false,
       setDisableMarkdown: (disableMarkdown: boolean) => set({ disableMarkdown }),
 
-      enterIsNewline: false,
+      enterIsNewline: true,
       setEnterIsNewline: (enterIsNewline: boolean) => set({ enterIsNewline }),
 
       renderCodeLineNumbers: false,
