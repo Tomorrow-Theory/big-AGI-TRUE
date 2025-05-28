@@ -46,7 +46,7 @@ export function useCapabilityTextToImage(): CapabilityTextToImage {
     return stableLlmsModelServices.current = next;
   });
 
-  const hasProdiaModels = useProdiaStore(state => !!state.modelId);
+  const hasProdiaModels = false; // useProdiaStore.getState().modelId !== null; // TODO: Prodia models are not yet available in the client
 
 
   // memo
