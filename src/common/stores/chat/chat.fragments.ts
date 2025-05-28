@@ -32,8 +32,9 @@ export type DMessageFragment =
  */
 export type DMessageContentFragment = _DMessageFragmentWrapper<'content',
   | DMessageTextPart              // plain text or mixed content -> BlockRenderer
+  | DMessageAudioRefPart          // audio blob reference
   | DMessageImageRefPart          // large image
-  | DMessageToolInvocationPart    // shown to dev only, singature of the llm function call
+  | DMessageToolInvocationPart    // shown to dev only, signature of the llm function call
   | DMessageToolResponsePart      // shown to dev only, response of the llm
   | DMessageErrorPart             // red message, e.g. non-content application issues
   | _SentinelPart
@@ -94,6 +95,8 @@ type _DMessageFragmentWrapper<TFragment, TPart extends { pt: string }> = {
 export type DMessageTextPart = { pt: 'text', text: string };
 
 export type DMessageErrorPart = { pt: 'error', error: string };
+
+export type DMessageAudioRefPart = { pt: 'audio_ref', dataRef: DMessageDataRef, altText?: string, durationMs?: number };
 
 export type DMessageImageRefPart = { pt: 'image_ref', dataRef: DMessageDataRef, altText?: string, width?: number, height?: number };
 
@@ -198,16 +201,16 @@ export type DMessageDataRef =
 
 /// Helpers - Fragment Type Guards - (we don't need 'fragment is X' since TypeScript 5.5.2)
 
-export function isContentFragment(fragment: DMessageFragment) {
-  return fragment.ft === 'content';
+export function isContentFragment(fragment: DMessageFragment): fragment is DMessageContentFragment {
+  return fragment.ft === 'content' && !!fragment.part?.pt;
 }
 
 export function isTextContentFragment(fragment: DMessageFragment): fragment is DMessageContentFragment & { part: DMessageTextPart } {
   return fragment.ft === 'content' && fragment.part.pt === 'text';
 }
 
-export function isAttachmentFragment(fragment: DMessageFragment) {
-  return fragment.ft === 'attachment';
+export function isAttachmentFragment(fragment: DMessageFragment): fragment is DMessageAttachmentFragment {
+  return fragment.ft === 'attachment' && !!fragment.part?.pt;
 }
 
 export function isContentOrAttachmentFragment(fragment: DMessageFragment) {
@@ -215,8 +218,8 @@ export function isContentOrAttachmentFragment(fragment: DMessageFragment) {
 }
 
 
-export function isVoidFragment(fragment: DMessageFragment) {
-  return fragment.ft === 'void';
+export function isVoidFragment(fragment: DMessageFragment): fragment is DMessageVoidFragment {
+  return fragment.ft === 'void' && !!fragment.part?.pt;
 }
 
 export function isVoidAnnotationsFragment(fragment: DMessageFragment): fragment is DMessageVoidFragment & { part: DVoidModelAnnotationsPart } {
@@ -230,6 +233,10 @@ export function isVoidThinkingFragment(fragment: DMessageFragment): fragment is 
 
 export function isDocPart(part: DMessageContentFragment['part'] | DMessageAttachmentFragment['part']) {
   return part.pt === 'doc';
+}
+
+export function isAudioRefPart(part: DMessageContentFragment['part'] | DMessageAttachmentFragment['part']) {
+  return part.pt === 'audio_ref';
 }
 
 export function isImageRefPart(part: DMessageContentFragment['part'] | DMessageAttachmentFragment['part']) {
@@ -269,6 +276,10 @@ export function createTextContentFragment(text: string): DMessageContentFragment
 
 export function createErrorContentFragment(error: string): DMessageContentFragment {
   return _createContentFragment(_create_Error_Part(error));
+}
+
+export function createAudioContentFragment(dataRef: DMessageDataRef, altText?: string, durationMs?: number): DMessageContentFragment {
+  return _createContentFragment(_create_AudioRef_Part(dataRef, altText, durationMs));
 }
 
 export function createImageContentFragment(dataRef: DMessageDataRef, altText?: string, width?: number, height?: number): DMessageContentFragment {
@@ -388,6 +399,10 @@ function _create_Doc_Part(vdt: DMessageDocMimeType, data: DMessageDataInline, re
   return { pt: 'doc', vdt, data, ref, l1Title, version, meta };
 }
 
+function _create_AudioRef_Part(dataRef: DMessageDataRef, altText?: string, durationMs?: number): DMessageAudioRefPart {
+  return { pt: 'audio_ref', dataRef, altText, durationMs };
+}
+
 function _create_ImageRef_Part(dataRef: DMessageDataRef, altText?: string, width?: number, height?: number): DMessageImageRefPart {
   return { pt: 'image_ref', dataRef, altText, width, height };
 }
@@ -440,13 +455,17 @@ function _create_Sentinel_Part(): _SentinelPart {
 }
 
 function _duplicate_Part<TPart extends (DMessageContentFragment | DMessageAttachmentFragment | DMessageVoidFragment)['part']>(part: TPart): TPart {
-  switch (part.pt) {
+  const pt = part.pt;
+  switch (pt) {
     case 'doc':
       const newDocVersion = Number(part.version ?? 1); // we don't increase the version on duplication (not sure we should?)
       return _create_Doc_Part(part.vdt, _duplicate_InlineData(part.data), part.ref, part.l1Title, newDocVersion, part.meta ? { ...part.meta } : undefined) as TPart;
 
     case 'error':
       return _create_Error_Part(part.error) as TPart;
+
+    case 'audio_ref':
+      return _create_AudioRef_Part(_duplicate_DataReference(part.dataRef), part.altText, part.durationMs) as TPart;
 
     case 'image_ref':
       return _create_ImageRef_Part(_duplicate_DataReference(part.dataRef), part.altText, part.width, part.height) as TPart;
@@ -481,6 +500,16 @@ function _duplicate_Part<TPart extends (DMessageContentFragment | DMessageAttach
 
     case '_pt_sentinel':
       return _create_Sentinel_Part() as TPart;
+
+    default:
+      const _exhaustiveCheck: never = pt;
+
+      // console.warn('[DEV] _duplicate_Part: Unknown part type, will duplicate as Error', { part });
+      // return _create_Error_Part(`Unknown part type '${(part as any)?.pt || '(undefined)'}'`) as TPart;
+
+      // unexpected case: if we are here, the best to do is probably to return a clone of the part, as returning
+      // nothing would corrupt the Fragment
+      return structuredClone(part) as TPart; // fallback to structured clone for unknown parts
   }
 }
 

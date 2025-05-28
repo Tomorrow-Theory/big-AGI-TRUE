@@ -15,6 +15,7 @@ import type { AixAPIChatGenerate_Request, AixMessages_ModelMessage, AixMessages_
 // configuration
 const MODEL_IMAGE_RESCALE_MIMETYPE = !Is.Browser.Safari ? 'image/webp' : 'image/jpeg';
 const MODEL_IMAGE_RESCALE_QUALITY = 0.90;
+const IGNORE_CGR_NO_IMAGE_DEREFERENCE = true; // set to false to raise an exception, otherwise the CGR will continue skipping the part
 
 
 // AIX <> Simple Text API helpers
@@ -136,9 +137,19 @@ export async function aixCGR_ChatSequence_FromDMessagesOrThrow(
             uMsg.parts.push(uFragment.part);
             break;
 
+          case 'audio_ref':
+            // Note: unsupported for now (shall await for the audio blob to upload it as inline audio for the model)
+            console.warn('aixCGR_FromDMessages: audio_ref part from User not implemented yet');
+            break;
+
           case 'image_ref':
             // note, we don't resize, as the user image is resized following the user's preferences
-            uMsg.parts.push(await _convertImageRefToInlineImageOrThrow(uFragment.part, false));
+            try {
+              uMsg.parts.push(await aixConvertImageRefToInlineImageOrThrow(uFragment.part, false));
+            } catch (error: any) {
+              if (IGNORE_CGR_NO_IMAGE_DEREFERENCE) console.warn(`Image from the user missing in the chat generation request because: ${error?.message || error?.toString() || 'Unknown error'} - continuing without`);
+              else throw error;
+            }
             break;
 
           case 'doc':
@@ -204,14 +215,18 @@ export async function aixCGR_ChatSequence_FromDMessagesOrThrow(
             break;
 
           case 'doc':
-            // TODO
-            console.warn('aixCGR_FromDMessages: doc part from Assistant not implemented yet');
+            console.warn('aixCGR_FromDMessages: doc part from Assistant not possible');
             // mMsg.parts.push(aFragment.part);
             break;
 
           case 'error':
             // Note: the llm will receive the extra '[ERROR]' text; this could be optimized to handle errors better
             modelMessage.parts.push({ pt: 'text', text: `[ERROR] ${aFragment.part.error}` });
+            break;
+
+          case 'audio_ref':
+            // Note: unsupported for now (shall await for the audio blob to upload it as inline audio for the model)
+            console.warn('aixCGR_FromDMessages: audio_ref part from Assistant not implemented yet');
             break;
 
           case 'image_ref':
@@ -223,7 +238,12 @@ export async function aixCGR_ChatSequence_FromDMessagesOrThrow(
              */
             const isLastAssistantMessage = _index === lastAssistantMessageIndex;
             const resizeMode = isLastAssistantMessage ? false : 'openai-low-res';
-            modelMessage.parts.push(await _convertImageRefToInlineImageOrThrow(aFragment.part, resizeMode));
+            try {
+              modelMessage.parts.push(await aixConvertImageRefToInlineImageOrThrow(aFragment.part, resizeMode));
+            } catch (error: any) {
+              if (IGNORE_CGR_NO_IMAGE_DEREFERENCE) console.warn(`Image from the assistant missing in the chat generation request because: ${error?.message || error?.toString() || 'Unknown error'} - continuing without`);
+              else throw error;
+            }
             break;
 
           case 'tool_response':
@@ -291,7 +311,7 @@ export async function aixCGR_ChatSequence_FromDMessagesOrThrow(
 
 /// Parts that differ from DMessage*Part to AIX
 
-async function _convertImageRefToInlineImageOrThrow(imageRefPart: DMessageImageRefPart, resizeMode: LLMImageResizeMode | false): Promise<AixParts_InlineImagePart> {
+export async function aixConvertImageRefToInlineImageOrThrow(imageRefPart: DMessageImageRefPart, resizeMode: LLMImageResizeMode | false): Promise<AixParts_InlineImagePart> {
 
   // validate
   const { dataRef } = imageRefPart;
