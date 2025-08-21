@@ -10,6 +10,7 @@ import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import ContentCutIcon from '@mui/icons-material/ContentCut';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import DifferenceIcon from '@mui/icons-material/Difference';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
@@ -121,6 +122,10 @@ const antCachePromptOnSx: SxProps = {
 };
 
 
+export interface ChatMessageFunctionsHandle {
+  beginEditTextContent: () => void;
+}
+
 export type ChatMessageTextPartEditState = { [fragmentId: DMessageFragmentId]: string };
 
 export const ChatMessageMemo = React.memo(ChatMessage);
@@ -134,6 +139,7 @@ export const ChatMessageMemo = React.memo(ChatMessage);
  *
  */
 export function ChatMessage(props: {
+  actionsRef?: React.Ref<ChatMessageFunctionsHandle>,
   message: DMessage,
   diffPreviousText?: string,
   fitScreen: boolean,
@@ -220,7 +226,7 @@ export function ChatMessage(props: {
   const handleHighlightSelText = useSelHighlighterMemo(messageId, selText, contentFragments, fromAssistant, props.onMessageFragmentReplace);
 
   const textSubject = selText ? selText : fragmentFlattenedText;
-  const isSpecialT2I = textSubject.startsWith('https://images.prodia.xyz/') || textSubject.startsWith('/draw ') || textSubject.startsWith('/imagine ') || textSubject.startsWith('/img ');
+  const isSpecialT2I = textSubject.startsWith('/draw ') || textSubject.startsWith('/imagine ') || textSubject.startsWith('/img ');
   const couldDiagram = textSubject.length >= 100 && !isSpecialT2I;
   const couldImagine = textSubject.length >= 3 && !isSpecialT2I;
   const couldSpeak = couldImagine;
@@ -527,6 +533,15 @@ export function ChatMessage(props: {
   }, [closeBubble]);
 
 
+  // Expose actions handle for parent components
+  React.useImperativeHandle(props.actionsRef, () => ({
+    beginEditTextContent: () => {
+      if (!isEditingText && props.onMessageFragmentReplace && !messagePendingIncomplete)
+        handleEditsBegin();
+    },
+  }), [handleEditsBegin, isEditingText, messagePendingIncomplete, props.onMessageFragmentReplace]);
+
+
   // Blocks renderer
 
   const handleBlocksContextMenu = React.useCallback((event: React.MouseEvent) => {
@@ -752,7 +767,7 @@ export function ChatMessage(props: {
               contentScaling={adjContentScaling}
               messageRole={messageRole}
               disabled={isEditingText}
-              onFragmentDelete={handleFragmentDelete}
+              onFragmentDelete={!props.onMessageFragmentDelete ? undefined : handleFragmentDelete}
             />
           )}
 
@@ -787,10 +802,10 @@ export function ChatMessage(props: {
             onEditsApply={handleApplyAllEdits}
             onEditsCancel={handleEditsCancel}
 
-            onFragmentBlank={handleFragmentNew}
-            onFragmentDelete={handleFragmentDelete}
+            onFragmentAddBlank={!props.onMessageFragmentAppend ? undefined : handleFragmentNew}
+            onFragmentDelete={!props.onMessageFragmentDelete ? undefined : handleFragmentDelete}
             onFragmentReplace={!props.onMessageFragmentReplace ? undefined : handleFragmentReplace}
-            onMessageDelete={props.onMessageDelete ? handleOpsDelete : undefined}
+            onMessageDelete={!props.onMessageDelete ? undefined : handleOpsDelete}
 
             onContextMenu={(props.onMessageFragmentReplace && ENABLE_CONTEXT_MENU) ? handleBlocksContextMenu : undefined}
             onDoubleClick={(props.onMessageFragmentReplace /*&& doubleClickToEdit disabled, as we may have shift too */) ? handleBlocksDoubleClick : undefined}
@@ -806,8 +821,8 @@ export function ChatMessage(props: {
               zenMode={zenMode}
               allowSelection={!isEditingText}
               disableMarkdownText={disableMarkdown}
-              onFragmentDelete={handleFragmentDelete}
-              onFragmentReplace={handleFragmentReplace}
+              onFragmentDelete={!props.onMessageFragmentDelete ? undefined : handleFragmentDelete}
+              onFragmentReplace={!props.onMessageFragmentReplace ? undefined : handleFragmentReplace}
             />
           )}
 
@@ -1087,6 +1102,14 @@ export function ChatMessage(props: {
                   closeBubble();
                 }}>
                   <FormatBoldIcon />
+                </IconButton>
+              </Tooltip>}
+              {fromAssistant && <Tooltip disableInteractive arrow placement='top' title='Cut Text'>
+                <IconButton disabled={!handleHighlightSelText} onClick={!handleHighlightSelText ? undefined : () => {
+                  handleHighlightSelText('cut');
+                  closeBubble();
+                }}>
+                  <ContentCutIcon />
                 </IconButton>
               </Tooltip>}
               {fromAssistant && <Divider />}

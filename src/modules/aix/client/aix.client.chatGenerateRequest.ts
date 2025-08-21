@@ -1,10 +1,12 @@
-import { getImageAsset } from '~/modules/dblobs/dblobs.images';
+import type { Immutable } from '~/common/types/immutable.types';
+import { getImageAsset } from '~/common/stores/blob/dblobs-portability';
 
 import { DLLM, LLM_IF_HOTFIX_NoStream, LLM_IF_HOTFIX_StripImages, LLM_IF_HOTFIX_StripSys0, LLM_IF_HOTFIX_Sys0ToUsr0 } from '~/common/stores/llms/llms.types';
 import { DMessage, DMessageRole, DMetaReferenceItem, MESSAGE_FLAG_AIX_SKIP, MESSAGE_FLAG_VND_ANT_CACHE_AUTO, MESSAGE_FLAG_VND_ANT_CACHE_USER, messageHasUserFlag } from '~/common/stores/chat/chat.message';
-import { DMessageFragment, DMessageImageRefPart, isAttachmentFragment, isContentOrAttachmentFragment, isDocPart, isTextContentFragment, isToolResponseFunctionCallPart, isVoidThinkingFragment } from '~/common/stores/chat/chat.fragments';
+import { DMessageFragment, DMessageImageRefPart, DMessageZyncAssetReferencePart, isAttachmentFragment, isContentOrAttachmentFragment, isDocPart, isTextContentFragment, isToolResponseFunctionCallPart, isVoidThinkingFragment } from '~/common/stores/chat/chat.fragments';
 import { Is } from '~/common/util/pwaUtils';
-import { LLMImageResizeMode, resizeBase64ImageIfNeeded } from '~/common/util/imageUtils';
+import { convert_Base64WithMimeType_To_Blob, convert_Blob_To_Base64 } from '~/common/util/blobUtils';
+import { imageBlobResizeIfNeeded, LLMImageResizeMode } from '~/common/util/imageUtils';
 
 // NOTE: pay particular attention to the "import type", as this is importing from the server-side Zod definitions
 import type { AixAPIChatGenerate_Request, AixMessages_ModelMessage, AixMessages_ToolMessage, AixMessages_UserMessage, AixParts_InlineImagePart, AixParts_MetaCacheControl, AixParts_MetaInReferenceToPart, AixParts_ModelAuxPart } from '../server/api/aix.wiretypes';
@@ -137,9 +139,53 @@ export async function aixCGR_ChatSequence_FromDMessagesOrThrow(
             uMsg.parts.push(uFragment.part);
             break;
 
-          case 'audio_ref':
-            // Note: unsupported for now (shall await for the audio blob to upload it as inline audio for the model)
-            console.warn('aixCGR_FromDMessages: audio_ref part from User not implemented yet');
+          case 'reference':
+            const refPart = uFragment.part;
+            const refPartRt = refPart.rt;
+            switch (refPartRt) {
+
+              case 'zync':
+                const zt = refPart.zType;
+                switch (zt) {
+
+                  case 'asset':
+                    const at = refPart.assetType;
+                    switch (at) {
+
+                      case 'image':
+                        // dereference the Zync Image Asset, converting it to an inline image
+                        try {
+                          uMsg.parts.push(await aixConvertZyncImageAssetRefToInlineImageOrThrow(refPart, false));
+                        } catch (error: any) {
+                          if (IGNORE_CGR_NO_IMAGE_DEREFERENCE) console.warn(`Zync asset reference from the user missing in the chat generation request because: ${error?.message || error?.toString() || 'Unknown error'} - continuing without`);
+                          else throw error;
+                        }
+                        break;
+
+                      case 'audio':
+                        // dereference the Zync Audio Asset, converting it to an inline buffer
+                        throw '[DEV] audio assets from the user are not supported yet';
+
+                      default:
+                        const _exhaustiveCheck: never = at;
+                        console.warn('aixCGR_FromDMessages: unexpected Zync asset type from the user', at);
+                        break;
+                    }
+                    break;
+
+                  default:
+                    const _exhaustiveCheck: never = zt;
+                    break;
+                }
+                break;
+
+              case '_sentinel':
+                break; // not a real case
+
+              default:
+                const _exhaustiveCheck: never = refPartRt;
+                console.warn('aixCGR_FromDMessages: unexpected User fragment part type', refPartRt);
+            }
             break;
 
           case 'image_ref':
@@ -215,7 +261,8 @@ export async function aixCGR_ChatSequence_FromDMessagesOrThrow(
             break;
 
           case 'doc':
-            console.warn('aixCGR_FromDMessages: doc part from Assistant not possible');
+            // TODO
+            console.warn('aixCGR_FromDMessages: doc part from Assistant not implemented yet');
             // mMsg.parts.push(aFragment.part);
             break;
 
@@ -224,9 +271,55 @@ export async function aixCGR_ChatSequence_FromDMessagesOrThrow(
             modelMessage.parts.push({ pt: 'text', text: `[ERROR] ${aFragment.part.error}` });
             break;
 
-          case 'audio_ref':
-            // Note: unsupported for now (shall await for the audio blob to upload it as inline audio for the model)
-            console.warn('aixCGR_FromDMessages: audio_ref part from Assistant not implemented yet');
+          case 'reference':
+            const refPart = aFragment.part;
+            const refPartRt = refPart.rt;
+            switch (refPartRt) {
+
+              case 'zync':
+                const zt = refPart.zType;
+                switch (zt) {
+
+                  case 'asset':
+                    const at = refPart.assetType;
+                    switch (at) {
+
+                      case 'image':
+                        // dereference the Zync Image Asset, converting it to an inline image
+                        const isLastAssistantMessage = _index === lastAssistantMessageIndex;
+                        const resizeMode = isLastAssistantMessage ? false : 'openai-low-res';
+                        try {
+                          modelMessage.parts.push(await aixConvertZyncImageAssetRefToInlineImageOrThrow(refPart, resizeMode));
+                        } catch (error: any) {
+                          if (IGNORE_CGR_NO_IMAGE_DEREFERENCE) console.warn(`Zync asset reference from the assistant missing in the chat generation request because: ${error?.message || error?.toString() || 'Unknown error'} - continuing without`);
+                          else throw error;
+                        }
+                        break;
+
+                      case 'audio':
+                        // dereference the Zync Audio Asset, converting it to an inline buffer
+                        throw '[DEV] audio assets from the assistant are not supported yet';
+
+                      default:
+                        const _exhaustiveCheck: never = at;
+                        console.warn('aixCGR_FromDMessages: unexpected Zync asset type from the assistant', at);
+                        break;
+                    }
+                    break;
+
+                  default:
+                    const _exhaustiveCheck: never = zt;
+                    break;
+                }
+                break;
+
+              case '_sentinel':
+                break; // not a real case
+
+              default:
+                const _exhaustiveCheck: never = refPartRt;
+                console.warn('aixCGR_FromDMessages: unexpected Assistant fragment part type', refPartRt);
+            }
             break;
 
           case 'image_ref':
@@ -311,6 +404,21 @@ export async function aixCGR_ChatSequence_FromDMessagesOrThrow(
 
 /// Parts that differ from DMessage*Part to AIX
 
+export async function aixConvertZyncImageAssetRefToInlineImageOrThrow(assetRefPart: Immutable<DMessageZyncAssetReferencePart>, resizeMode: LLMImageResizeMode | false): Promise<AixParts_InlineImagePart> {
+
+  // during transition period, use legacy fallback if available
+  if (assetRefPart._legacyImageRefPart)
+    return aixConvertImageRefToInlineImageOrThrow(assetRefPart._legacyImageRefPart, resizeMode);
+
+  // Future: Full Asset system implementation
+  // FIXME: [ASSET] get the Blob (local > download if missing) associated to the DAsset, pointed to by the reference, and convert it to base64 when used inline
+  // const asset = await zyncAssetActions().getAssetData(assetRefPart.zUuid);
+  // if (asset && asset.binaryData)
+  //   return _clientCreateAixInlineImagePart(asset.binaryData.base64, asset.mimeType);
+
+  throw new Error(`Asset reference ${assetRefPart.zUuid} - Asset system not yet implemented or legacy fallback missing`);
+}
+
 export async function aixConvertImageRefToInlineImageOrThrow(imageRefPart: DMessageImageRefPart, resizeMode: LLMImageResizeMode | false): Promise<AixParts_InlineImagePart> {
 
   // validate
@@ -327,13 +435,24 @@ export async function aixConvertImageRefToInlineImageOrThrow(imageRefPart: DMess
     throw new Error('Image asset not found');
   }
 
-  // convert if requested
+  // base64 -> blob conversion
   let { mimeType, base64: base64Data } = imageAsset.data;
+
+  // convert if requested (with intermediate Blob transformation)
   if (resizeMode) {
-    const resizedData = await resizeBase64ImageIfNeeded(mimeType, base64Data, resizeMode, MODEL_IMAGE_RESCALE_MIMETYPE, MODEL_IMAGE_RESCALE_QUALITY).catch(() => null);
-    if (resizedData) {
-      base64Data = resizedData.base64;
-      mimeType = resizedData.mimeType as any;
+    try {
+      // convert base64 -> Blob
+      const imageBlob = await convert_Base64WithMimeType_To_Blob(base64Data, mimeType, 'aixConvertImageRefToInlineImage');
+      // resize Blob
+      const resizedOp = await imageBlobResizeIfNeeded(imageBlob, resizeMode, MODEL_IMAGE_RESCALE_MIMETYPE, MODEL_IMAGE_RESCALE_QUALITY);
+      if (resizedOp) {
+        // if resized, convert resized Blob back to base64
+        base64Data = await convert_Blob_To_Base64(resizedOp.blob, 'aixConvertImageRefToInlineImage');
+        mimeType = resizedOp.blob.type as any;
+      }
+    } catch (resizeError) {
+      console.warn('[DEV] aixConvertImageRefToInlineImageOrThrow: Error resizing image:', resizeError);
+      // continue without resizing, as this is not critical
     }
   }
 
