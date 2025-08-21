@@ -87,7 +87,6 @@ const zIndexComposerOverlayMic = 10;
 const SHOW_TIPS_AFTER_RELOADS = 25;
 
 
-
 const paddingBoxSx: SxProps = {
   p: { xs: 1, md: 2 },
 };
@@ -116,6 +115,7 @@ export function Composer(props: {
   onConversationsImportFromFiles: (files: File[]) => Promise<void>;
   onTextImagine: (conversationId: DConversationId, text: string) => void;
   setIsMulticast: (on: boolean) => void;
+  onComposerHasContent: (hasContent: boolean) => void;
   sx?: SxProps;
 }) {
 
@@ -243,6 +243,13 @@ export function Composer(props: {
       setComposeText(startupText);
     }
   }, [setComposeText, setStartupText, startupText]);
+
+  // Effect: notify the parent of presence/absence of content
+  const isContentful = composeText.length > 0 || !!attachmentDrafts.length;
+  const { onComposerHasContent } = props;
+  React.useEffect(() => {
+    onComposerHasContent?.(isContentful);
+  }, [isContentful, onComposerHasContent]);
 
 
   // Overlay actions
@@ -723,11 +730,11 @@ export function Composer(props: {
 
   if (isDesktop && timeToShowTips && !isDraw) {
     if (explainShiftEnter)
-      textPlaceholder += !enterIsNewline ? '\n\n💡 Shift + Enter to add a new line' : '\n\n💡 Shift + Enter to send';
-    else if (explainAltEnter)
-      textPlaceholder += platformAwareKeystrokes('\n\n💡 Tip: Alt + Enter to just append the message');
+      textPlaceholder += !enterIsNewline ? '\n\n⏎ Shift + Enter to add a new line' : '\n\n➤ Shift + Enter to send';
+      // else if (explainAltEnter)
+    //   textPlaceholder += platformAwareKeystrokes('\n\n⭳ Tip: Alt + Enter to just append the message');
     else if (explainCtrlEnter)
-      textPlaceholder += platformAwareKeystrokes('\n\n💡 Tip: Ctrl + Enter to beam');
+      textPlaceholder += platformAwareKeystrokes('\n\n⫷ Tip: Ctrl + Enter to beam');
   }
 
   const stableGridSx: SxProps = React.useMemo(() => ({
@@ -860,8 +867,6 @@ export function Composer(props: {
                     onChange={handleTextareaTextChange}
                     onKeyDown={handleTextareaKeyDown}
                     onPasteCapture={handleAttachCtrlV}
-                    // onFocusCapture={handleFocusModeOn}
-                    // onBlurCapture={handleFocusModeOff}
                     endDecorator={isDraw
                       ? <ComposerTextAreaDrawActions
                         composerText={composeText}
@@ -999,7 +1004,7 @@ export function Composer(props: {
               {/* [desktop] This column arrangement will have the [desktop] beam button right under call */}
               <Box sx={isMobile ? { display: 'flex' } : { display: 'grid', gap: 1 }}>
 
-                {/* [mobile] bottom-corner secondary button */}
+                {/* [mobile] bottom-corner secondary button }*/}
                 {isMobile && (showChatExtras
                     ? (composerQuickButton === 'call'
                       ? <ButtonCallMemo isMobile disabled={noConversation || noLLM} onClick={handleCallClicked} />
@@ -1007,8 +1012,7 @@ export function Composer(props: {
                     : isDraw
                       ? <ButtonOptionsDraw isMobile onClick={handleDrawOptionsClicked} sx={{ mr: { xs: 1, md: 2 } }} />
                       : <IconButton disabled sx={{ mr: { xs: 1, md: 2 } }} />
-
-                    )}
+                )}
                 {/* Responsive Send/Stop buttons */}
                 <ButtonGroup
                   variant={sendButtonVariant}
