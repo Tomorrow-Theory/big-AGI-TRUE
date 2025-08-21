@@ -125,7 +125,7 @@ export function MobileNavItems(props: { currentApp?: NavItemApp }) {
 
       {/* Group 2: Modals & Social Links */}
       <Box sx={_styles.linksGroup}>
-        <Button
+         {/*<Button
           size='sm'
           color='neutral'
           aria-selected={props.currentApp?.route === '/news'}
