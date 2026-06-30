@@ -4,8 +4,8 @@ import { persist } from 'zustand/middleware';
 
 interface TextToImageStore {
 
-  selectedT2IProviderId: string | null; // null = auto-select, specific ID = user choice
-  setSelectedT2IProviderId: (providerId: string | null) => void;
+  activeProviderId: string | null; // null = auto-select, specific ID = user choice
+  setActiveProviderId: (activeProviderId: string | null) => void;
 
 }
 
