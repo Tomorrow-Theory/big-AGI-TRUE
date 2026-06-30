@@ -39,7 +39,7 @@ export function useCapabilityTextToImage(): CapabilityTextToImage {
     return stableLlmsModelServices.current = next;
   });
 
-  const userProviderId = useTextToImageStore(state => state.selectedT2IProviderId);
+  const userProviderId = useTextToImageStore(state => state.activeProviderId);
 
   const dalleModelId = useDalleStore(state => state.dalleModelId);
 
@@ -63,33 +63,32 @@ export function useCapabilityTextToImage(): CapabilityTextToImage {
 
 
   return {
-    mayWork,
-    mayEdit,
-    providers,
-    activeProviderId: activeProvider?.providerId || null,
-    setActiveProviderId: useTextToImageStore.getState().setSelectedT2IProviderId,
-  };
-}
+      mayWork,
+      mayEdit,
+      providers,
+      activeProviderId: activeProvider?.providerId || null,
+      setActiveProviderId: useTextToImageStore.getState().setActiveProviderId,
+    };
+  }
 
 
-// T2I API
+  // T2I API
 
-export function getActiveTextToImageProviderOrThrow() {
+  export function getActiveTextToImageProviderOrThrow() {
 
-  // get user selection and available providers
-  const { selectedT2IProviderId } = useTextToImageStore.getState();
-  const { llms, sources: modelsServices } = llmsStoreState();
-  const llmsModelServiceIDs = _findLlmsT2IServices(llms, modelsServices);
-  const providers = _getTextToImageProviders(llmsModelServiceIDs);
+    // get user selection and available providers
+    const { activeProviderId } = useTextToImageStore.getState();
+    const { llms, sources: modelsServices } = llmsStoreState();
+    const llmsModelServiceIDs = _findLlmsT2IServices(llms, modelsServices);
+    const providers = _getTextToImageProviders(llmsModelServiceIDs);
 
-  // resolve the active provider using pure function
-  const activeProvider = _resolveActiveT2IProvider(selectedT2IProviderId, providers);
-  if (!activeProvider)
-    throw new Error('No Text-to-Image providers are configured');
+    // resolve the active provider using pure function
+    const activeProvider = _resolveActiveT2IProvider(activeProviderId, providers);
+    if (!activeProvider)
+      throw new Error('No Text-to-Image providers are configured');
 
-  return activeProvider;
-}
-
+    return activeProvider;
+  }
 /**
  * Low-level T2I generation that returns raw image outputs (base64 + metadata)
  * - NOTE: MINIMIZE - the app wants to use the other version, instead, which creates the DBlob/Assets directly
