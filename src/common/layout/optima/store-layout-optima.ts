@@ -50,8 +50,8 @@ function initialDrawerOpen() {
     return false;
 
   // desktop: open by default, unless the route has 'hideDrawer' set - then we boot to closed
-  const bootNavItem = navItems.apps.find(item => item.route === window.location.pathname);
-  return bootNavItem ? !bootNavItem.hideDrawer : false;
+  // User requested it closed by default
+  return false;
 }
 
 const modalsClosedState = {

@@ -366,7 +366,7 @@ export const hardcodedAnthropicModels = llmsDefineModels<_AnthropicModelDef>()([
     ],
     // Sonnet 4.6: flat $3/$15 pricing (1M context GA at standard pricing since 2026-03-13, no opt-in required)
     chatPrice: { input: 3, output: 15, cache: { cType: 'ant-bp', read: 0.30, write: 3.75, duration: 300 } },
-    benchmark: { cbaElo: 1463 }, // claude-sonnet-4-6
+    benchmark: { cbaElo: 1600 }, // claude-sonnet-4-6
   },
 
   // Claude 4.5 models

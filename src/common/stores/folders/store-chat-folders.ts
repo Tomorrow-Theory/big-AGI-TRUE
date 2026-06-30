@@ -73,8 +73,7 @@ export const useFolderStore = create<FolderStore>()(/*devtools(*/
           const [movedFolder] = newFolders.splice(fromIndex, 1);
           newFolders.splice(toIndex, 0, movedFolder);
           return { folders: newFolders };
-        });
-      },
+        }),
 
       setFolderName: (folderId: string, title: string) =>
         set(state => ({
@@ -92,8 +91,7 @@ export const useFolderStore = create<FolderStore>()(/*devtools(*/
               ? { ...folder, color }
               : folder,
           ),
-        }));
-      },
+        })),
 
       addConversationToFolder: (folderId: string, conversationId: string) =>
         set(state => {

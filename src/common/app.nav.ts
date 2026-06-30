@@ -7,9 +7,17 @@ import DifferenceOutlinedIcon from '@mui/icons-material/DifferenceOutlined';
 import Diversity2Icon from '@mui/icons-material/Diversity2';
 import EventNoteIcon from '@mui/icons-material/EventNote';
 import EventNoteOutlinedIcon from '@mui/icons-material/EventNoteOutlined';
+import FormatPaintOutlinedIcon from '@mui/icons-material/FormatPaintOutlined';
+import FormatPaintTwoToneIcon from '@mui/icons-material/FormatPaintTwoTone';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import AutoAwesomeOutlinedIcon from '@mui/icons-material/AutoAwesomeOutlined';
+import AccountTreeOutlinedIcon from '@mui/icons-material/AccountTreeOutlined';
+import AccountTreeTwoToneIcon from '@mui/icons-material/AccountTreeTwoTone';
 import GrainIcon from '@mui/icons-material/Grain';
 import IosShareIcon from '@mui/icons-material/IosShare';
 import IosShareOutlinedIcon from '@mui/icons-material/IosShareOutlined';
+import WorkspacesIcon from '@mui/icons-material/Workspaces';
+import WorkspacesOutlinedIcon from '@mui/icons-material/WorkspacesOutlined';
 // Link icons
 import GitHubIcon from '@mui/icons-material/GitHub';
 import { DiscordIcon } from '~/common/components/icons/3rdparty/DiscordIcon';

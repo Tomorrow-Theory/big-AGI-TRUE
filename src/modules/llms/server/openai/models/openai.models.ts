@@ -1,7 +1,20 @@
 import type { OpenAIWire_API_Models_List } from '~/modules/aix/server/dispatch/wiretypes/openai.wiretypes';
 
 import type { DModelParameterId } from '~/common/stores/llms/llms.parameters';
-import { DModelInterfaceV1, LLM_IF_HOTFIX_NoTemperature, LLM_IF_HOTFIX_StripImages, LLM_IF_OAI_Chat, LLM_IF_OAI_Fn, LLM_IF_OAI_PromptCaching, LLM_IF_OAI_Reasoning, LLM_IF_OAI_Responses, LLM_IF_OAI_Vision, LLM_IF_Outputs_Audio } from '~/common/stores/llms/llms.types';
+import {
+  DModelInterfaceV1,
+  LLM_IF_HOTFIX_NoStream,
+  LLM_IF_HOTFIX_NoTemperature,
+  LLM_IF_HOTFIX_StripImages,
+  LLM_IF_HOTFIX_Sys0ToUsr0,
+  LLM_IF_OAI_Chat,
+  LLM_IF_OAI_Fn,
+  LLM_IF_OAI_PromptCaching,
+  LLM_IF_OAI_Reasoning,
+  LLM_IF_OAI_Responses,
+  LLM_IF_OAI_Vision,
+  LLM_IF_Outputs_Audio
+} from '~/common/stores/llms/llms.types';
 import { Release } from '~/common/app.release';
 
 import type { ModelDescriptionSchema, OrtVendorLookupResult } from '../../llm.server.types';
@@ -1184,7 +1197,7 @@ export const _knownOpenAIChatModels = llmsDefineModels<_OpenAIModelDef>()([
     contextWindow: 128000,
     maxCompletionTokens: 32768,
     trainingDataCutoff: 'Oct 2023',
-    interfaces: [LLM_IF_OAI_Chat, LLM_IF_SPECIAL_OAI_O1Preview, LLM_IF_OAI_PromptCaching],
+    interfaces: [LLM_IF_OAI_Chat, LLM_IF_HOTFIX_NoStream, LLM_IF_HOTFIX_Sys0ToUsr0, LLM_IF_OAI_PromptCaching],
     chatPrice: { input: 15, cache: { cType: 'oai-ac', read: 7.50 }, output: 60 },
     benchmark: { cbaElo: 13 },
     isPreview: true,
@@ -1196,7 +1209,7 @@ export const _knownOpenAIChatModels = llmsDefineModels<_OpenAIModelDef>()([
     contextWindow: 128000,
     maxCompletionTokens: 32768,
     trainingDataCutoff: 'Oct 2023',
-    interfaces: [LLM_IF_OAI_Chat, LLM_IF_SPECIAL_OAI_O1Preview, LLM_IF_OAI_PromptCaching],
+    interfaces: [LLM_IF_OAI_Chat, LLM_IF_HOTFIX_NoStream, LLM_IF_HOTFIX_Sys0ToUsr0, LLM_IF_OAI_PromptCaching],
     chatPrice: { input: 15, cache: { cType: 'oai-ac', read: 7.50 }, output: 60 },
     benchmark: { cbaElo: 13 },
     isPreview: true,
@@ -1213,7 +1226,7 @@ export const _knownOpenAIChatModels = llmsDefineModels<_OpenAIModelDef>()([
     contextWindow: 128000,
     maxCompletionTokens: 65536,
     trainingDataCutoff: 'Oct 2023',
-    interfaces: [LLM_IF_OAI_Chat, LLM_IF_SPECIAL_OAI_O1Preview, LLM_IF_OAI_PromptCaching],
+    interfaces: [LLM_IF_OAI_Chat, LLM_IF_HOTFIX_NoStream, LLM_IF_HOTFIX_Sys0ToUsr0, LLM_IF_OAI_PromptCaching],
     chatPrice: { input: 3, cache: { cType: 'oai-ac', read: 1.5 }, output: 12 },
     benchmark: { cbaElo: 13 },
     isPreview: true,
@@ -1225,7 +1238,7 @@ export const _knownOpenAIChatModels = llmsDefineModels<_OpenAIModelDef>()([
     contextWindow: 128000,
     maxCompletionTokens: 65536,
     trainingDataCutoff: 'Oct 2023',
-    interfaces: [LLM_IF_OAI_Chat, LLM_IF_SPECIAL_OAI_O1Preview, LLM_IF_OAI_PromptCaching],
+    interfaces: [LLM_IF_OAI_Chat, LLM_IF_HOTFIX_NoStream, LLM_IF_HOTFIX_Sys0ToUsr0, LLM_IF_OAI_PromptCaching],
     chatPrice: { input: 3, cache: { cType: 'oai-ac', read: 1.5 }, output: 12 },
     benchmark: { cbaElo: 13 },
     isPreview: true,

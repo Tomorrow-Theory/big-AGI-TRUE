@@ -222,21 +222,6 @@ export function AppNews() {
           >
             Continue
           </Button>
-          {!Release.IsNodeDevBuild && (
-            <Button
-              variant='solid' color='primary' size='lg'
-              component={Link} href={bigAgiProUrl} target='_blank' noLinkStyle
-              endDecorator={<><ArrowOutwardRoundedIcon /></>}
-              sx={{
-                boxShadow: '0 8px 24px -4px rgb(var(--joy-palette-primary-mainChannel) / 20%)',
-                minWidth: 180,
-                // transform: 'translateY(-1px)',
-              }}
-            >
-              Big-AGI Pro
-              ✨
-            </Button>
-          )}
         </Box>
 
         {/*<Typography level='title-sm' sx={{ mb: 1, placeSelf: 'start', ml: 1 }}>*/}

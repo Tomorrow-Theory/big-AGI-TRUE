@@ -68,7 +68,7 @@ export default function MyDocument({ emotionStyleTags }: MyDocumentProps) {
         {emotionStyleTags}
       </Head>
       <body>
-      <InitColorSchemeScript />
+      <InitColorSchemeScript defaultMode='dark' />
       <Main />
       <NextScript />
       </body>
